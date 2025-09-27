@@ -32,15 +32,20 @@
             line-height: 1.6;
             min-height: 100vh;
             overflow-x: hidden;
+            width: 100%;
         }
 
         .zen-container {
             max-width: 1200px;
             margin: 0 auto;
             padding: 0 20px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
-        /* Floating Elements */
+        /* Floating Elements - Adjusted for mobile */
         .floating-element {
             position: absolute;
             opacity: 0.1;
@@ -54,7 +59,7 @@
             border-radius: 50%;
             background: var(--primary-sage);
             top: 10%;
-            right: -100px;
+            right: -50px;
             animation: float 8s ease-in-out infinite;
         }
 
@@ -64,7 +69,7 @@
             border-radius: 50%;
             background: var(--secondary-sage);
             bottom: 20%;
-            left: -75px;
+            left: -50px;
             animation: float 6s ease-in-out infinite reverse;
         }
 
@@ -74,7 +79,7 @@
             border-radius: 50%;
             background: var(--accent-gold);
             top: 60%;
-            right: 10%;
+            right: 5%;
             animation: float 10s ease-in-out infinite;
         }
 
@@ -89,11 +94,13 @@
             text-align: center;
             position: relative;
             z-index: 10;
+            width: 100%;
+            max-width: 800px;
         }
 
         .zen-title {
             font-family: 'Playfair Display', serif;
-            font-size: clamp(2.5rem, 5vw, 4rem);
+            font-size: clamp(2rem, 5vw, 4rem);
             font-weight: 600;
             color: var(--charcoal);
             margin-bottom: 20px;
@@ -102,13 +109,14 @@
         }
 
         .zen-subtitle {
-            font-size: 1.2rem;
+            font-size: clamp(1rem, 2.5vw, 1.2rem);
             color: var(--muted-gray);
             font-weight: 300;
             max-width: 600px;
             margin: 0 auto 40px;
             opacity: 0;
             animation: fadeInUp 1s ease-out 0.6s forwards;
+            padding: 0 10px;
         }
 
         .zen-divider {
@@ -123,11 +131,14 @@
         /* Game Cards */
         .games-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 40px;
             padding: 40px 0;
             position: relative;
             z-index: 10;
+            width: 100%;
+            max-width: 1200px;
+            justify-items: center;
         }
 
         .game-card {
@@ -143,6 +154,8 @@
             animation: cardFadeIn 0.8s ease-out forwards;
             position: relative;
             overflow: hidden;
+            width: 100%;
+            max-width: 400px;
         }
 
         .game-card:hover {
@@ -269,6 +282,7 @@
             font-size: 0.9rem;
             position: relative;
             z-index: 10;
+            width: 100%;
         }
 
         .footer-divider {
@@ -295,22 +309,66 @@
 
         /* Responsive */
         @media (max-width: 768px) {
+            .zen-container {
+                padding: 0 15px;
+            }
+
             .games-grid {
                 grid-template-columns: 1fr;
                 gap: 30px;
+                padding: 20px 0;
             }
 
             .game-card {
                 padding: 30px 20px;
+                margin: 0 auto;
+                max-width: 100%;
             }
 
             .zen-title {
-                font-size: 2.5rem;
+                font-size: clamp(1.8rem, 8vw, 2.5rem);
+            }
+
+            .zen-subtitle {
+                font-size: 1rem;
+                padding: 0 5px;
             }
 
             .game-meta {
                 flex-direction: column;
                 gap: 10px;
+            }
+
+            .header {
+                padding: 40px 0 20px;
+            }
+
+            .zen-footer {
+                padding: 60px 0 30px;
+            }
+
+            /* Hide floating elements on very small screens */
+            .floating-element {
+                display: none;
+            }
+
+            .zen-ornament {
+                display: none;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .zen-container {
+                padding: 0 10px;
+            }
+
+            .game-card {
+                padding: 25px 15px;
+            }
+
+            .zen-button {
+                padding: 12px 25px;
+                font-size: 0.9rem;
             }
         }
 
@@ -372,7 +430,7 @@
                     satu pemain mendapat keyword berbeda. Diskusikan dan temukan siapa impostornya!
                 </p>
             
-                <a href="#" class="zen-button" onclick="playImpostorGame()">Lihat</a>
+                <a href="impostor/" class="zen-button" >Lihat</a>
             </div>
 
             <div class="game-card">
@@ -383,7 +441,7 @@
                     keputusan, memilih tim, atau menentukan urutan dalam permainan.
                 </p>
              
-                <a href="#" class="zen-button" onclick="comingSoon()">Lihat</a>
+                <a href="random/" class="zen-button" >Lihat</a>
             </div>
 
             <div class="game-card">
@@ -394,7 +452,7 @@
                     konsentrasi dan kemampuan berpikir dalam suasana yang tenang.
                 </p>
             
-                <a href="#" class="zen-button" onclick="comingSoon()">Lihat</a>
+                <a href="mind-games/" class="zen-button" >Lihat</a>
             </div>
         </main>
 
@@ -429,8 +487,6 @@
             observer.observe(card);
         });
 
-
-    
         // Add subtle parallax effect to floating elements
         window.addEventListener('scroll', () => {
             const scrolled = window.pageYOffset;

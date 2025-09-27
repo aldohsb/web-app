@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zen Mind Games</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:wght@400;600&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-sage: #9CAF88;
+            --secondary-sage: #B8C5A6;
+            --soft-cream: #F7F6F3;
+            --warm-white: #FEFDFB;
+            --charcoal: #2C3E2D;
+            --muted-gray: #6B7461;
+            --accent-gold: #D4B886;
+            --success-green: #7FB069;
+            --error-red: #E07A5F;
+            --shadow-light: rgba(156, 175, 136, 0.15);
+            --shadow-medium: rgba(44, 62, 45, 0.08);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, var(--warm-white) 0%, var(--soft-cream) 100%);
+            color: var(--charcoal);
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 20px 0;
+        }
+
+        .zen-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            padding: 40px 0;
+        }
+
+        .zen-title {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(2rem, 4vw, 3rem);
+            font-weight: 600;
+            color: var(--charcoal);
+            margin-bottom: 15px;
+        }
+
+        .zen-subtitle {
+            font-size: 1.1rem;
+            color: var(--muted-gray);
+            font-weight: 300;
+            margin-bottom: 30px;
+        }
+
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--primary-sage);
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            margin-bottom: 30px;
+        }
+
+        .back-button:hover {
+            color: var(--charcoal);
+            transform: translateX(-5px);
+        }
+
+        /* Game Selection */
+        .game-selection {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .game-card {
+            background: var(--warm-white);
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 6px 25px var(--shadow-light);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .game-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary-sage);
+            box-shadow: 0 12px 35px var(--shadow-medium);
+        }
+
+        .game-card.active {
+            border-color: var(--primary-sage);
+            background: linear-gradient(135deg, var(--primary-sage), var(--secondary-sage));
+            color: white;
+        }
+
+        .game-icon {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .game-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .game-description {
+            font-size: 0.9rem;
+            color: var(--muted-gray);
+            line-height: 1.5;
+        }
+
+        .game-card.active .game-description {
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        /* Game Container */
+        .game-container {
+            background: var(--warm-white);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 8px 32px var(--shadow-light);
+            display: none;
+        }
+
+        .game-container.active {
+            display: block;
+            animation: gameSlideIn 0.5s ease-out;
+        }
+
+        /* Memory Game */
+        .memory-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            max-width: 400px;
+            margin: 0 auto 30px;
+        }
+
+        .memory-card {
+            aspect-ratio: 1;
+            background: var(--soft-cream);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            user-select: none;
+        }
+
+        .memory-card:hover {
+            border-color: var(--primary-sage);
+        }
+
+        .memory-card.flipped {
+            background: var(--primary-sage);
+            color: white;
+            transform: rotateY(180deg);
+        }
+
+        .memory-card.matched {
+            background: var(--success-green);
+            color: white;
+        }
+
+        /* Math Challenge */
+        .math-question {
+            background: linear-gradient(135deg, var(--primary-sage), var(--accent-gold));
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 25px;
+        }
+
+        .math-input {
+            width: 100%;
+            max-width: 200px;
+            padding: 15px;
+            border: 2px solid var(--primary-sage);
+            border-radius: 10px;
+            font-size: 1.2rem;
+            text-align: center;
+            margin: 0 auto 20px;
+            display: block;
+        }
+
+        .math-input:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(156, 175, 136, 0.3);
+        }
+
+        /* Pattern Memory */
+        .pattern-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            max-width: 250px;
+            margin: 0 auto 30px;
+        }
+
+        .pattern-cell {
+            aspect-ratio: 1;
+            background: var(--soft-cream);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .pattern-cell:hover {
+            border-color: var(--primary-sage);
+        }
+
+        .pattern-cell.active {
+            background: var(--primary-sage);
+            box-shadow: 0 0 20px rgba(156, 175, 136, 0.5);
+        }
+
+        .pattern-cell.user-active {
+            background: var(--accent-gold);
+        }
+
+        .pattern-cell.correct {
+            background: var(--success-green);
+        }
+
+        .pattern-cell.wrong {
+            background: var(--error-red);
+        }
+
+        /* Word Association */
+        .word-display {
+            background: linear-gradient(135deg, var(--secondary-sage), var(--accent-gold));
+            color: white;
+            padding: 40px;
+            border-radius: 15px;
+            text-align: center;
+            font-size: 2.5rem;
+            font-weight: 600;
+            margin-bottom: 25px;
+            min-height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .word-input {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid var(--primary-sage);
+            border-radius: 12px;
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+        }
+
+        .word-input:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(156, 175, 136, 0.3);
+        }
+
+        /* Game Stats */
+        .game-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: rgba(156, 175, 136, 0.1);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: var(--primary-sage);
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--muted-gray);
+            margin-top: 5px;
+        }
+
+        /* Buttons */
+        .zen-button {
+            background: linear-gradient(135deg, var(--primary-sage), var(--secondary-sage));
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .zen-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(156, 175, 136, 0.4);
+        }
+
+        .zen-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .zen-button.secondary {
+            background: linear-gradient(135deg, var(--muted-gray), var(--charcoal));
+        }
+
+        .zen-button.success {
+            background: linear-gradient(135deg, var(--success-green), var(--primary-sage));
+        }
+
+        /* Timer */
+        .timer {
+            background: var(--accent-gold);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: 600;
+            display: inline-block;
+            margin-bottom: 20px;
+        }
+
+        /* Results */
+        .result-message {
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            margin: 20px 0;
+            font-weight: 500;
+        }
+
+        .result-message.success {
+            background: rgba(127, 176, 105, 0.2);
+            color: var(--success-green);
+            border: 2px solid var(--success-green);
+        }
+
+        .result-message.error {
+            background: rgba(224, 122, 95, 0.2);
+            color: var(--error-red);
+            border: 2px solid var(--error-red);
+        }
+
+        /* Animations */
+        @keyframes gameSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .pulse {
+            animation: pulse 0.5s ease-in-out;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .memory-grid {
+                max-width: 300px;
+                gap: 10px;
+            }
+            
+            .game-container {
+                padding: 25px;
+            }
+
+            .math-question, .word-display {
+                padding: 25px;
+                font-size: 1.5rem;
+            }
+
+            .game-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="zen-container">
+        <header class="header">
+         
+                
+            <h1 class="zen-title">🧩 Mind Games</h1>
+            <p class="zen-subtitle">Latih otak Anda dengan permainan yang menenangkan dan menantang</p>
+        </header>
+
+        <!-- Game Selection -->
+        <div class="game-selection">
+            <div class="game-card" onclick="selectGame('memory')">
+                <span class="game-icon">🃏</span>
+                <div class="game-title">Memory Cards</div>
+                <div class="game-description">Cocokkan kartu yang tersembunyi dan latih daya ingat Anda</div>
+            </div>
+
+            <div class="game-card" onclick="selectGame('math')">
+                <span class="game-icon">🧮</span>
+                <div class="game-title">Math Challenge</div>
+                <div class="game-description">Selesaikan soal matematika dengan cepat dan akurat</div>
+            </div>
+
+            <div class="game-card" onclick="selectGame('pattern')">
+                <span class="game-icon">🔍</span>
+                <div class="game-title">Pattern Memory</div>
+                <div class="game-description">Ingat dan ulangi pola yang ditampilkan</div>
+            </div>
+
+            <div class="game-card" onclick="selectGame('word')">
+                <span class="game-icon">💭</span>
+                <div class="game-title">Word Association</div>
+                <div class="game-description">Temukan kata yang berkaitan dengan kata yang diberikan</div>
+            </div>
+        </div>
+
+        <!-- Memory Game -->
+        <div id="memory-game" class="game-container">
+            <div class="game-stats">
+                <div class="stat-card">
+                    <span class="stat-value" id="memory-moves">0</span>
+                    <div class="stat-label">Langkah</div>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-value" id="memory-matches">0</span>
+                    <div class="stat-label">Pasangan</div>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-value" id="memory-time">0:00</span>
+                    <div class="stat-label">Waktu</div>
+                </div>
+            </div>
+            
+            <div class="memory-grid" id="memory-grid"></div>
+            
+            <div style="text-align: center;">
+                <button class="zen-button" onclick="startMemoryGame()">🎯 Mulai Permainan</button>
+                <button class="zen-button secondary" onclick="resetMemoryGame()">🔄 Reset</button>
+            </div>
+        </div>
+
+        <!-- Math Challenge -->
+        <div id="math-game" class="game-container">
+            <div class="game-stats">
+                <div class="stat-card">
+                    <span class="stat-value" id="math-score">0</span>
+                    <div class="stat-label">Skor</div>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-value" id="math-streak">0</span>
+                    <div class="stat-label">Berturut</div>
+                </div>
+                <div class="stat-card">
+                    <span class="timer" id="math-timer">30</span>
+                </div>
+            </div>
+
+            <div class="math-question" id="math-question">Klik 'Mulai' untuk bermain!</div>
+            
+            <input type="number" class="math-input" id="math-input" placeholder="Jawaban..." disabled>
+            
+            <div style="text-align: center;">
+                <button class="zen-button" id="math-start" onclick="startMathGame()">🚀 Mulai</button>
+                <button class="zen-button secondary" onclick="submitMathAnswer()">✓ Jawab</button>
+            </div>
+            
+            <div id="math-result" class="result-message" style="display: none;"></div>
+        </div>
+
+        <!-- Pattern Memory -->
+        <div id="pattern-game" class="game-container">
+            <div class="game-stats">
+                <div class="stat-card">
+                    <span class="stat-value" id="pattern-level">1</span>
+                    <div class="stat-label">Level</div>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-value" id="pattern-score">0</span>
+                    <div class="stat-label">Skor</div>
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-bottom: 20px;">
+                <div id="pattern-instruction">Perhatikan pola yang akan ditampilkan</div>
+            </div>
+
+            <div class="pattern-grid" id="pattern-grid">
+                <div class="pattern-cell" data-index="0"></div>
+                <div class="pattern-cell" data-index="1"></div>
+                <div class="pattern-cell" data-index="2"></div>
+                <div class="pattern-cell" data-index="3"></div>
+                <div class="pattern-cell" data-index="4"></div>
+                <div class="pattern-cell" data-index="5"></div>
+                <div class="pattern-cell" data-index="6"></div>
+                <div class="pattern-cell" data-index="7"></div>
+                <div class="pattern-cell" data-index="8"></div>
+            </div>
+
+            <div style="text-align: center;">
+                <button class="zen-button" id="pattern-start" onclick="startPatternGame()">🎯 Mulai</button>
+                <button class="zen-button secondary" onclick="resetPatternGame()">🔄 Reset</button>
+            </div>
+        </div>
+
+        <!-- Word Association -->
+        <div id="word-game" class="game-container">
+            <div class="game-stats">
+                <div class="stat-card">
+                    <span class="stat-value" id="word-score">0</span>
+                    <div class="stat-label">Skor</div>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-value" id="word-streak">0</span>
+                    <div class="stat-label">Berturut</div>
+                </div>
+                <div class="stat-card">
+                    <span class="timer" id="word-timer">60</span>
+                </div>
+            </div>
+
+            <div class="word-display" id="word-display">Klik 'Mulai' untuk bermain!</div>
+            
+            <input type="text" class="word-input" id="word-input" placeholder="Masukkan kata yang berkaitan..." disabled>
+            
+            <div style="text-align: center;">
+                <button class="zen-button" id="word-start" onclick="startWordGame()">🚀 Mulai</button>
+                <button class="zen-button secondary" onclick="submitWordAnswer()">✓ Kirim</button>
+            </div>
+            
+            <div id="word-result" class="result-message" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentGame = null;
+        
+        // Memory Game Variables
+        let memoryCards = [];
+        let flippedCards = [];
+        let memoryMoves = 0;
+        let memoryMatches = 0;
+        let memoryTimer = null;
+        let memoryStartTime = null;
+
+        // Math Game Variables
+        let mathScore = 0;
+        let mathStreak = 0;
+        let mathTimer = null;
+        let mathTimeLeft = 30;
+        let currentMathQuestion = null;
+
+        // Pattern Game Variables
+        let patternLevel = 1;
+        let patternScore = 0;
+        let currentPattern = [];
+        let userPattern = [];
+        let showingPattern = false;
+
+        // Word Game Variables
+        let wordScore = 0;
+        let wordStreak = 0;
+        let wordTimer = null;
+        let wordTimeLeft = 60;
+        let currentWord = '';
+
+        // Word associations database
+        const wordAssociations = {
+            'matahari': ['panas', 'terang', 'siang', 'kuning', 'cahaya', 'energi', 'vitamin'],
+            'air': ['basah', 'jernih', 'minum', 'hujan', 'sungai', 'laut', 'es'],
+            'pohon': ['hijau', 'daun', 'batang', 'hutan', 'oksigen', 'buah', 'rindang'],
+            'buku': ['baca', 'halaman', 'cerita', 'ilmu', 'penulis', 'perpustakaan', 'kertas'],
+            'makanan': ['lezat', 'lapar', 'nutrisi', 'masak', 'restoran', 'sehat', 'rasa'],
+            'musik': ['lagu', 'nada', 'instrumen', 'penyanyi', 'harmoni', 'ritme', 'konser'],
+            'rumah': ['tinggal', 'keluarga', 'atap', 'pintu', 'nyaman', 'kamar', 'taman'],
+            'sekolah': ['belajar', 'guru', 'siswa', 'kelas', 'pelajaran', 'ujian', 'ilmu'],
+            'olahraga': ['sehat', 'bergerak', 'kompetisi', 'tim', 'latihan', 'medali', 'prestasi'],
+            'teknologi': ['komputer', 'canggih', 'internet', 'inovasi', 'digital', 'modern', 'aplikasi']
+        };
+
+        function selectGame(gameType) {
+            // Remove active class from all cards
+            document.querySelectorAll('.game-card').forEach(card => {
+                card.classList.remove('active');
+            });
+
+            // Hide all game containers
+            document.querySelectorAll('.game-container').forEach(container => {
+                container.classList.remove('active');
+            });
+
+            // Activate selected game
+            event.target.closest('.game-card').classList.add('active');
+            document.getElementById(gameType + '-game').classList.add('active');
+            
+            currentGame = gameType;
+            
+            // Reset games when switching
+            resetAllGames();
+        }
+
+        function resetAllGames() {
+            resetMemoryGame();
+            resetMathGame();
+            resetPatternGame();
+            resetWordGame();
+        }
+
+        // Memory Game Functions
+        function startMemoryGame() {
+            const emojis = ['🐱', '🐶', '🦊', '🐻', '🐯', '🦁', '🐸', '🐧'];
+            const gameEmojis = [...emojis, ...emojis];
+            memoryCards = gameEmojis.sort(() => Math.random() - 0.5);
+            
+            const grid = document.getElementById('memory-grid');
+            grid.innerHTML = '';
+            
+            memoryCards.forEach((emoji, index) => {
+                const card = document.createElement('div');
+                card.className = 'memory-card';
+                card.dataset.emoji = emoji;
+                card.dataset.index = index;
+                card.textContent = '?';
+                card.addEventListener('click', flipMemoryCard);
+                grid.appendChild(card);
+            });
+            
+            memoryMoves = 0;
+            memoryMatches = 0;
+            memoryStartTime = Date.now();
+            
+            updateMemoryStats();
+            startMemoryTimer();
+        }
+
+        function flipMemoryCard(event) {
+            const card = event.target;
+            
+            if (card.classList.contains('flipped') || card.classList.contains('matched') || flippedCards.length >= 2) {
+                return;
+            }
+            
+            card.classList.add('flipped');
+            card.textContent = card.dataset.emoji;
+            flippedCards.push(card);
+            
+            if (flippedCards.length === 2) {
+                memoryMoves++;
+                updateMemoryStats();
+                
+                setTimeout(checkMemoryMatch, 1000);
+            }
+        }
+
+        function checkMemoryMatch() {
+            const [card1, card2] = flippedCards;
+            
+            if (card1.dataset.emoji === card2.dataset.emoji) {
+                card1.classList.add('matched');
+                card2.classList.add('matched');
+                memoryMatches++;
+                
+                if (memoryMatches === 8) {
+                    clearInterval(memoryTimer);
+                    setTimeout(() => {
+                        alert('🎉 Selamat! Anda berhasil menyelesaikan permainan!');
+                    }, 500);
+                }
+            } else {
+                card1.classList.remove('flipped');
+                card2.classList.remove('flipped');
+                card1.textContent = '?';
+                card2.textContent = '?';
+            }
+            
+            flippedCards = [];
+            updateMemoryStats();
+        }
+
+        function startMemoryTimer() {
+            memoryTimer = setInterval(() => {
+                const elapsed = Math.floor((Date.now() - memoryStartTime) / 1000);
+                const minutes = Math.floor(elapsed / 60);
+                const seconds = elapsed % 60;
+                document.getElementById('memory-time').textContent = 
+                    `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            }, 1000);
+        }
+
+        function updateMemoryStats() {
+            document.getElementById('memory-moves').textContent = memoryMoves;
+            document.getElementById('memory-matches').textContent = memoryMatches;
+        }
+
+        function resetMemoryGame() {
+            document.getElementById('memory-grid').innerHTML = '';
+            flippedCards = [];
+            memoryMoves = 0;
+            memoryMatches = 0;
+            if (memoryTimer) clearInterval(memoryTimer);
+            document.getElementById('memory-time').textContent = '0:00';
+            updateMemoryStats();
+        }
+
+        // Math Game Functions
+        function startMathGame() {
+            mathScore = 0;
+            mathStreak = 0;
+            mathTimeLeft = 30;
+            
+            document.getElementById('math-input').disabled = false;
+            document.getElementById('math-start').disabled = true;
+            
+            generateMathQuestion();
+            startMathTimer();
+            updateMathStats();
+        }
+
+        function generateMathQuestion() {
+            const operations = ['+', '-', '×', '÷'];
+            const operation = operations[Math.floor(Math.random() * operations.length)];
+            let num1, num2, answer;
+            
+            switch (operation) {
+                case '+':
+                    num1 = Math.floor(Math.random() * 50) + 1;
+                    num2 = Math.floor(Math.random() * 50) + 1;
+                    answer = num1 + num2;
+                    break;
+                case '-':
+                    num1 = Math.floor(Math.random() * 50) + 20;
+                    num2 = Math.floor(Math.random() * 20) + 1;
+                    answer = num1 - num2;
+                    break;
+                case '×':
+                    num1 = Math.floor(Math.random() * 12) + 1;
+                    num2 = Math.floor(Math.random() * 12) + 1;
+                    answer = num1 * num2;
+                    break;
+                case '÷':
+                    answer = Math.floor(Math.random() * 12) + 1;
+                    num2 = Math.floor(Math.random() * 12) + 1;
+                    num1 = answer * num2;
+                    break;
+            }
+            
+            currentMathQuestion = { num1, num2, operation, answer };
+            document.getElementById('math-question').textContent = `${num1} ${operation} ${num2} = ?`;
+            document.getElementById('math-input').value = '';
+            document.getElementById('math-input').focus();
+        }
+
+        function submitMathAnswer() {
+            const userAnswer = parseInt(document.getElementById('math-input').value);
+            const resultDiv = document.getElementById('math-result');
+            
+            if (userAnswer === currentMathQuestion.answer) {
+                mathScore += 10;
+                mathStreak++;
+                resultDiv.textContent = '✓ Benar!';
+                resultDiv.className = 'result-message success';
+                
+                if (mathStreak % 5 === 0) {
+                    mathScore += 50; // Bonus streak
+                }
+            } else {
+                mathStreak = 0;
+                resultDiv.textContent = `✗ Salah! Jawaban yang benar: ${currentMathQuestion.answer}`;
+                resultDiv.className = 'result-message error';
+            }
+            
+            resultDiv.style.display = 'block';
+            setTimeout(() => {
+                resultDiv.style.display = 'none';
+            }, 1500);
+            
+            updateMathStats();
+            
+            if (mathTimeLeft > 0) {
+                setTimeout(generateMathQuestion, 1500);
+            }
+        }
+
+        function startMathTimer() {
+            mathTimer = setInterval(() => {
+                mathTimeLeft--;
+                document.getElementById('math-timer').textContent = mathTimeLeft;
+                
+                if (mathTimeLeft <= 0) {
+                    clearInterval(mathTimer);
+                    document.getElementById('math-input').disabled = true;
+                    document.getElementById('math-start').disabled = false;
+                    document.getElementById('math-question').textContent = `Permainan selesai! Skor akhir: ${mathScore}`;
+                }
+            }, 1000);
+        }
+
+        function updateMathStats() {
+            document.getElementById('math-score').textContent = mathScore;
+            document.getElementById('math-streak').textContent = mathStreak;
+        }
+
+        function resetMathGame() {
+            if (mathTimer) clearInterval(mathTimer);
+            mathScore = 0;
+            mathStreak = 0;
+            mathTimeLeft = 30;
+            document.getElementById('math-timer').textContent = '30';
+            document.getElementById('math-question').textContent = "Klik 'Mulai' untuk bermain!";
+            document.getElementById('math-input').disabled = true;
+            document.getElementById('math-input').value = '';
+            document.getElementById('math-start').disabled = false;
+            document.getElementById('math-result').style.display = 'none';
+            updateMathStats();
+        }
+
+        // Pattern Game Functions
+        function startPatternGame() {
+            patternLevel = 1;
+            patternScore = 0;
+            updatePatternStats();
+            nextPatternLevel();
+        }
+
+        function nextPatternLevel() {
+            currentPattern = [];
+            userPattern = [];
+            showingPattern = true;
+            
+            // Generate pattern
+            for (let i = 0; i < patternLevel + 2; i++) {
+                currentPattern.push(Math.floor(Math.random() * 9));
+            }
+            
+            document.getElementById('pattern-instruction').textContent = 'Perhatikan pola...';
+            
+            // Show pattern
+            let index = 0;
+            const showNext = () => {
+                if (index < currentPattern.length) {
+                    const cells = document.querySelectorAll('.pattern-cell');
+                    cells.forEach(cell => cell.classList.remove('active'));
+                    
+                    cells[currentPattern[index]].classList.add('active');
+                    cells[currentPattern[index]].classList.add('pulse');
+                    
+                    setTimeout(() => {
+                        cells[currentPattern[index]].classList.remove('active', 'pulse');
+                        index++;
+                        setTimeout(showNext, 300);
+                    }, 600);
+                } else {
+                    showingPattern = false;
+                    document.getElementById('pattern-instruction').textContent = 'Ulangi pola yang ditampilkan!';
+                    enablePatternInput();
+                }
+            };
+            
+            setTimeout(showNext, 1000);
+        }
+
+        function enablePatternInput() {
+            const cells = document.querySelectorAll('.pattern-cell');
+            cells.forEach(cell => {
+                cell.addEventListener('click', handlePatternClick);
+                cell.style.cursor = 'pointer';
+            });
+        }
+
+        function handlePatternClick(event) {
+            if (showingPattern) return;
+            
+            const cellIndex = parseInt(event.target.dataset.index);
+            userPattern.push(cellIndex);
+            
+            event.target.classList.add('user-active');
+            
+            // Check if current input is correct
+            const currentIndex = userPattern.length - 1;
+            if (userPattern[currentIndex] !== currentPattern[currentIndex]) {
+                // Wrong pattern
+                showPatternResult(false);
+                return;
+            }
+            
+            // Check if pattern is complete
+            if (userPattern.length === currentPattern.length) {
+                showPatternResult(true);
+            }
+        }
+
+        function showPatternResult(success) {
+            const cells = document.querySelectorAll('.pattern-cell');
+            
+            if (success) {
+                patternScore += patternLevel * 10;
+                patternLevel++;
+                
+                cells.forEach((cell, index) => {
+                    if (currentPattern.includes(index)) {
+                        cell.classList.add('correct');
+                    }
+                });
+                
+                document.getElementById('pattern-instruction').textContent = `✓ Benar! Level ${patternLevel}`;
+                
+                setTimeout(() => {
+                    resetPatternCells();
+                    updatePatternStats();
+                    nextPatternLevel();
+                }, 2000);
+            } else {
+                cells.forEach((cell, index) => {
+                    if (userPattern.includes(index)) {
+                        cell.classList.add('wrong');
+                    }
+                });
+                
+                document.getElementById('pattern-instruction').textContent = `✗ Salah! Skor akhir: ${patternScore}`;
+                
+                setTimeout(() => {
+                    resetPatternGame();
+                }, 3000);
+            }
+            
+            disablePatternInput();
+        }
+
+        function resetPatternCells() {
+            const cells = document.querySelectorAll('.pattern-cell');
+            cells.forEach(cell => {
+                cell.classList.remove('active', 'user-active', 'correct', 'wrong');
+            });
+        }
+
+        function disablePatternInput() {
+            const cells = document.querySelectorAll('.pattern-cell');
+            cells.forEach(cell => {
+                cell.removeEventListener('click', handlePatternClick);
+                cell.style.cursor = 'default';
+            });
+        }
+
+        function updatePatternStats() {
+            document.getElementById('pattern-level').textContent = patternLevel;
+            document.getElementById('pattern-score').textContent = patternScore;
+        }
+
+        function resetPatternGame() {
+            patternLevel = 1;
+            patternScore = 0;
+            currentPattern = [];
+            userPattern = [];
+            showingPattern = false;
+            
+            resetPatternCells();
+            disablePatternInput();
+            
+            document.getElementById('pattern-instruction').textContent = 'Perhatikan pola yang akan ditampilkan';
+            updatePatternStats();
+        }
+
+        // Word Game Functions
+        function startWordGame() {
+            wordScore = 0;
+            wordStreak = 0;
+            wordTimeLeft = 60;
+            
+            document.getElementById('word-input').disabled = false;
+            document.getElementById('word-start').disabled = true;
+            
+            generateWordQuestion();
+            startWordTimer();
+            updateWordStats();
+        }
+
+        function generateWordQuestion() {
+            const words = Object.keys(wordAssociations);
+            currentWord = words[Math.floor(Math.random() * words.length)];
+            document.getElementById('word-display').textContent = currentWord.toUpperCase();
+            document.getElementById('word-input').value = '';
+            document.getElementById('word-input').focus();
+        }
+
+        function submitWordAnswer() {
+            const userAnswer = document.getElementById('word-input').value.toLowerCase().trim();
+            const resultDiv = document.getElementById('word-result');
+            
+            if (!userAnswer) return;
+            
+            const validAnswers = wordAssociations[currentWord] || [];
+            const isCorrect = validAnswers.includes(userAnswer) || 
+                            validAnswers.some(answer => answer.includes(userAnswer) || userAnswer.includes(answer));
+            
+            if (isCorrect) {
+                wordScore += 10 + wordStreak;
+                wordStreak++;
+                resultDiv.textContent = `✓ Benar! "${userAnswer}" berkaitan dengan "${currentWord}"`;
+                resultDiv.className = 'result-message success';
+            } else {
+                wordStreak = 0;
+                const hint = validAnswers[Math.floor(Math.random() * validAnswers.length)];
+                resultDiv.textContent = `✗ Coba lagi! Contoh: "${hint}"`;
+                resultDiv.className = 'result-message error';
+            }
+            
+            resultDiv.style.display = 'block';
+            setTimeout(() => {
+                resultDiv.style.display = 'none';
+            }, 2000);
+            
+            updateWordStats();
+            
+            if (wordTimeLeft > 0) {
+                setTimeout(generateWordQuestion, 2000);
+            }
+        }
+
+        function startWordTimer() {
+            wordTimer = setInterval(() => {
+                wordTimeLeft--;
+                document.getElementById('word-timer').textContent = wordTimeLeft;
+                
+                if (wordTimeLeft <= 0) {
+                    clearInterval(wordTimer);
+                    document.getElementById('word-input').disabled = true;
+                    document.getElementById('word-start').disabled = false;
+                    document.getElementById('word-display').textContent = `Permainan selesai! Skor: ${wordScore}`;
+                }
+            }, 1000);
+        }
+
+        function updateWordStats() {
+            document.getElementById('word-score').textContent = wordScore;
+            document.getElementById('word-streak').textContent = wordStreak;
+        }
+
+        function resetWordGame() {
+            if (wordTimer) clearInterval(wordTimer);
+            wordScore = 0;
+            wordStreak = 0;
+            wordTimeLeft = 60;
+            currentWord = '';
+            
+            document.getElementById('word-timer').textContent = '60';
+            document.getElementById('word-display').textContent = "Klik 'Mulai' untuk bermain!";
+            document.getElementById('word-input').disabled = true;
+            document.getElementById('word-input').value = '';
+            document.getElementById('word-start').disabled = false;
+            document.getElementById('word-result').style.display = 'none';
+            updateWordStats();
+        }
+
+     
+        
+
+        // Keyboard event listeners
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                if (currentGame === 'math' && !document.getElementById('math-input').disabled) {
+                    submitMathAnswer();
+                } else if (currentGame === 'word' && !document.getElementById('word-input').disabled) {
+                    submitWordAnswer();
+                }
+            }
+        });
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            // Auto-select first game
+            selectGame('memory');
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zen Random Generator</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:wght@400;600&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-sage: #9CAF88;
+            --secondary-sage: #B8C5A6;
+            --soft-cream: #F7F6F3;
+            --warm-white: #FEFDFB;
+            --charcoal: #2C3E2D;
+            --muted-gray: #6B7461;
+            --accent-gold: #D4B886;
+            --success-green: #7FB069;
+            --shadow-light: rgba(156, 175, 136, 0.15);
+            --shadow-medium: rgba(44, 62, 45, 0.08);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, var(--warm-white) 0%, var(--soft-cream) 100%);
+            color: var(--charcoal);
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 20px 0;
+        }
+
+        .zen-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            padding: 40px 0;
+        }
+
+        .zen-title {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(2rem, 4vw, 3rem);
+            font-weight: 600;
+            color: var(--charcoal);
+            margin-bottom: 15px;
+        }
+
+        .zen-subtitle {
+            font-size: 1.1rem;
+            color: var(--muted-gray);
+            font-weight: 300;
+            margin-bottom: 30px;
+        }
+
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--primary-sage);
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            margin-bottom: 30px;
+        }
+
+        .back-button:hover {
+            color: var(--charcoal);
+            transform: translateX(-5px);
+        }
+
+        /* Generator Tabs */
+        .generator-tabs {
+            display: flex;
+            background: var(--warm-white);
+            border-radius: 15px;
+            padding: 8px;
+            margin-bottom: 40px;
+            box-shadow: 0 4px 20px var(--shadow-light);
+            overflow-x: auto;
+        }
+
+        .tab-button {
+            flex: 1;
+            padding: 15px 20px;
+            border: none;
+            background: transparent;
+            color: var(--muted-gray);
+            font-weight: 500;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            min-width: fit-content;
+        }
+
+        .tab-button.active {
+            background: var(--primary-sage);
+            color: white;
+            box-shadow: 0 4px 15px rgba(156, 175, 136, 0.3);
+        }
+
+        .tab-button:hover:not(.active) {
+            background: rgba(156, 175, 136, 0.1);
+        }
+
+        /* Generator Content */
+        .generator-content {
+            background: var(--warm-white);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 8px 32px var(--shadow-light);
+            margin-bottom: 30px;
+        }
+
+        .generator-panel {
+            display: none;
+        }
+
+        .generator-panel.active {
+            display: block;
+        }
+
+        .input-group {
+            margin-bottom: 25px;
+        }
+
+        .input-label {
+            display: block;
+            font-weight: 500;
+            color: var(--charcoal);
+            margin-bottom: 8px;
+        }
+
+        .zen-input {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid rgba(156, 175, 136, 0.2);
+            border-radius: 12px;
+            font-size: 1rem;
+            background: var(--soft-cream);
+            color: var(--charcoal);
+            transition: all 0.3s ease;
+        }
+
+        .zen-input:focus {
+            outline: none;
+            border-color: var(--primary-sage);
+            background: var(--warm-white);
+            box-shadow: 0 0 0 3px rgba(156, 175, 136, 0.1);
+        }
+
+        .zen-textarea {
+            resize: vertical;
+            min-height: 120px;
+            font-family: inherit;
+        }
+
+        .input-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .zen-button {
+            background: linear-gradient(135deg, var(--primary-sage), var(--secondary-sage));
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .zen-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .zen-button:hover::before {
+            left: 100%;
+        }
+
+        .zen-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(156, 175, 136, 0.4);
+        }
+
+        .zen-button:active {
+            transform: translateY(0);
+        }
+
+        /* Result Display */
+        .result-container {
+            background: var(--warm-white);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 8px 32px var(--shadow-light);
+            text-align: center;
+            border: 2px solid var(--success-green);
+            display: none;
+        }
+
+        .result-container.show {
+            display: block;
+            animation: resultSlideIn 0.5s ease-out;
+        }
+
+        .result-title {
+            font-size: 1.2rem;
+            color: var(--muted-gray);
+            margin-bottom: 20px;
+            font-weight: 300;
+        }
+
+        .result-display {
+            background: linear-gradient(135deg, var(--primary-sage), var(--accent-gold));
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            word-break: break-word;
+            animation: pulse 2s infinite;
+        }
+
+        .result-meta {
+            color: var(--muted-gray);
+            font-size: 0.9rem;
+            margin-top: 15px;
+        }
+
+        .generate-again {
+            background: linear-gradient(135deg, var(--success-green), var(--primary-sage));
+            margin-top: 20px;
+        }
+
+        /* List Results */
+        .result-list {
+            display: grid;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .result-item {
+            background: rgba(156, 175, 136, 0.1);
+            padding: 15px 20px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 500;
+        }
+
+        .result-number {
+            background: var(--primary-sage);
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        /* Animations */
+        @keyframes resultSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .input-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .generator-content {
+                padding: 25px;
+            }
+
+            .generator-tabs {
+                flex-direction: column;
+            }
+
+            .tab-button {
+                text-align: center;
+            }
+        }
+
+        /* Zen ornaments */
+        .zen-ornament {
+            position: fixed;
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--primary-sage);
+            border-radius: 50%;
+            opacity: 0.1;
+            animation: float 15s ease-in-out infinite;
+            pointer-events: none;
+        }
+
+        .zen-ornament:nth-child(1) {
+            top: 20%;
+            right: 10%;
+            animation-delay: 0s;
+        }
+
+        .zen-ornament:nth-child(2) {
+            bottom: 30%;
+            left: 5%;
+            animation-delay: 5s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+    </style>
+</head>
+<body>
+    <div class="zen-ornament"></div>
+    <div class="zen-ornament"></div>
+
+    <div class="zen-container">
+        <header class="header">
+            <a href="#" class="back-button" onclick="goBack()">
+                ← Kembali ke Zen Garden
+            </a>
+            <h1 class="zen-title">🎲 Random Generator</h1>
+            <p class="zen-subtitle">Alat generator acak serbaguna untuk berbagai keperluan Anda</p>
+        </header>
+
+        <div class="generator-tabs">
+            <button class="tab-button active" onclick="showTab('number')">🔢 Angka</button>
+            <button class="tab-button" onclick="showTab('list')">📝 Daftar</button>
+            <button class="tab-button" onclick="showTab('team')">👥 Tim</button>
+            <button class="tab-button" onclick="showTab('decision')">🤔 Keputusan</button>
+            <button class="tab-button" onclick="showTab('password')">🔐 Password</button>
+        </div>
+
+        <!-- Number Generator -->
+        <div id="number-panel" class="generator-content generator-panel active">
+            <div class="input-row">
+                <div class="input-group">
+                    <label class="input-label">Angka Minimum</label>
+                    <input type="number" class="zen-input" id="minNumber" value="1" placeholder="1">
+                </div>
+                <div class="input-group">
+                    <label class="input-label">Angka Maksimum</label>
+                    <input type="number" class="zen-input" id="maxNumber" value="100" placeholder="100">
+                </div>
+            </div>
+            <div class="input-group">
+                <label class="input-label">Jumlah Angka yang Dihasilkan</label>
+                <input type="number" class="zen-input" id="numberCount" value="1" min="1" max="50" placeholder="1">
+            </div>
+            <button class="zen-button" onclick="generateNumbers()">🎲 Generate Angka</button>
+        </div>
+
+        <!-- List Generator -->
+        <div id="list-panel" class="generator-content generator-panel">
+            <div class="input-group">
+                <label class="input-label">Masukkan Daftar Item (pisahkan dengan enter)</label>
+                <textarea class="zen-input zen-textarea" id="listItems" placeholder="Masukkan item satu per baris...&#10;Contoh:&#10;Pizza&#10;Burger&#10;Sushi&#10;Pasta"></textarea>
+            </div>
+            <div class="input-group">
+                <label class="input-label">Jumlah Item yang Dipilih</label>
+                <input type="number" class="zen-input" id="listCount" value="1" min="1" placeholder="1">
+            </div>
+            <button class="zen-button" onclick="generateFromList()">🎯 Pilih Item</button>
+        </div>
+
+        <!-- Team Generator -->
+        <div id="team-panel" class="generator-content generator-panel">
+            <div class="input-group">
+                <label class="input-label">Masukkan Nama Pemain (pisahkan dengan enter)</label>
+                <textarea class="zen-input zen-textarea" id="teamPlayers" placeholder="Masukkan nama satu per baris...&#10;Contoh:&#10;Alice&#10;Bob&#10;Charlie&#10;Diana"></textarea>
+            </div>
+            <div class="input-group">
+                <label class="input-label">Jumlah Tim</label>
+                <input type="number" class="zen-input" id="teamCount" value="2" min="2" max="10" placeholder="2">
+            </div>
+            <button class="zen-button" onclick="generateTeams()">👥 Buat Tim</button>
+        </div>
+
+        <!-- Decision Generator -->
+        <div id="decision-panel" class="generator-content generator-panel">
+            <div class="input-group">
+                <label class="input-label">Masukkan Pilihan (pisahkan dengan enter)</label>
+                <textarea class="zen-input zen-textarea" id="decisionOptions" placeholder="Masukkan pilihan satu per baris...&#10;Contoh:&#10;Ya&#10;Tidak&#10;Mungkin&#10;Nanti saja"></textarea>
+            </div>
+            <button class="zen-button" onclick="makeDecision()">🤔 Buat Keputusan</button>
+        </div>
+
+        <!-- Password Generator -->
+        <div id="password-panel" class="generator-content generator-panel">
+            <div class="input-row">
+                <div class="input-group">
+                    <label class="input-label">Panjang Password</label>
+                    <input type="number" class="zen-input" id="passwordLength" value="12" min="4" max="100" placeholder="12">
+                </div>
+                <div class="input-group">
+                    <label class="input-label">Jumlah Password</label>
+                    <input type="number" class="zen-input" id="passwordCount" value="1" min="1" max="10" placeholder="1">
+                </div>
+            </div>
+            <div style="margin-bottom: 20px;">
+                <label style="display: flex; align-items: center; gap: 10px; margin: 10px 0;">
+                    <input type="checkbox" id="includeUppercase" checked style="transform: scale(1.2);">
+                    <span>Huruf Besar (A-Z)</span>
+                </label>
+                <label style="display: flex; align-items: center; gap: 10px; margin: 10px 0;">
+                    <input type="checkbox" id="includeLowercase" checked style="transform: scale(1.2);">
+                    <span>Huruf Kecil (a-z)</span>
+                </label>
+                <label style="display: flex; align-items: center; gap: 10px; margin: 10px 0;">
+                    <input type="checkbox" id="includeNumbers" checked style="transform: scale(1.2);">
+                    <span>Angka (0-9)</span>
+                </label>
+                <label style="display: flex; align-items: center; gap: 10px; margin: 10px 0;">
+                    <input type="checkbox" id="includeSymbols" style="transform: scale(1.2);">
+                    <span>Simbol (!@#$%)</span>
+                </label>
+            </div>
+            <button class="zen-button" onclick="generatePasswords()">🔐 Generate Password</button>
+        </div>
+
+        <!-- Result Display -->
+        <div id="result-container" class="result-container">
+            <div class="result-title">Hasil Generator:</div>
+            <div id="result-display" class="result-display"></div>
+            <div id="result-meta" class="result-meta"></div>
+            <button class="zen-button generate-again" onclick="generateAgain()">🔄 Generate Lagi</button>
+        </div>
+    </div>
+
+    <script>
+        let currentTab = 'number';
+
+        function showTab(tabName) {
+            // Hide all panels
+            document.querySelectorAll('.generator-panel').forEach(panel => {
+                panel.classList.remove('active');
+            });
+
+            // Remove active class from all tabs
+            document.querySelectorAll('.tab-button').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Show selected panel and activate tab
+            document.getElementById(tabName + '-panel').classList.add('active');
+            event.target.classList.add('active');
+            
+            // Hide result container when switching tabs
+            document.getElementById('result-container').classList.remove('show');
+            
+            currentTab = tabName;
+        }
+
+        function generateNumbers() {
+            const min = parseInt(document.getElementById('minNumber').value) || 1;
+            const max = parseInt(document.getElementById('maxNumber').value) || 100;
+            const count = parseInt(document.getElementById('numberCount').value) || 1;
+
+            if (min >= max) {
+                alert('Angka minimum harus lebih kecil dari maksimum');
+                return;
+            }
+
+            if (count > (max - min + 1)) {
+                alert('Jumlah angka yang diminta terlalu besar untuk rentang yang diberikan');
+                return;
+            }
+
+            let results = [];
+            let numbers = [];
+            
+            if (count === 1) {
+                results.push(Math.floor(Math.random() * (max - min + 1)) + min);
+            } else {
+                // Generate unique numbers
+                while (numbers.length < count) {
+                    const num = Math.floor(Math.random() * (max - min + 1)) + min;
+                    if (!numbers.includes(num)) {
+                        numbers.push(num);
+                    }
+                }
+                results = numbers.sort((a, b) => a - b);
+            }
+
+            showResult(results.join(', '), `Rentang: ${min} - ${max} | Jumlah: ${count}`);
+        }
+
+        function generateFromList() {
+            const items = document.getElementById('listItems').value.split('\n').filter(item => item.trim() !== '');
+            const count = parseInt(document.getElementById('listCount').value) || 1;
+
+            if (items.length === 0) {
+                alert('Mohon masukkan daftar item terlebih dahulu');
+                return;
+            }
+
+            if (count > items.length) {
+                alert('Jumlah item yang diminta lebih besar dari daftar yang tersedia');
+                return;
+            }
+
+            let results = [];
+            let availableItems = [...items];
+
+            for (let i = 0; i < count; i++) {
+                const randomIndex = Math.floor(Math.random() * availableItems.length);
+                results.push(availableItems.splice(randomIndex, 1)[0]);
+            }
+
+            if (results.length === 1) {
+                showResult(results[0], `Dipilih dari ${items.length} item`);
+            } else {
+                showListResult(results, `Dipilih ${count} dari ${items.length} item`);
+            }
+        }
+
+        function generateTeams() {
+            const players = document.getElementById('teamPlayers').value.split('\n').filter(player => player.trim() !== '');
+            const teamCount = parseInt(document.getElementById('teamCount').value) || 2;
+
+            if (players.length === 0) {
+                alert('Mohon masukkan daftar pemain terlebih dahulu');
+                return;
+            }
+
+            if (teamCount > players.length) {
+                alert('Jumlah tim tidak boleh lebih besar dari jumlah pemain');
+                return;
+            }
+
+            // Shuffle players
+            const shuffledPlayers = [...players].sort(() => Math.random() - 0.5);
+            const teams = [];
+
+            for (let i = 0; i < teamCount; i++) {
+                teams.push([]);
+            }
+
+            shuffledPlayers.forEach((player, index) => {
+                teams[index % teamCount].push(player);
+            });
+
+            showTeamResult(teams);
+        }
+
+        function makeDecision() {
+            const options = document.getElementById('decisionOptions').value.split('\n').filter(option => option.trim() !== '');
+
+            if (options.length === 0) {
+                alert('Mohon masukkan pilihan terlebih dahulu');
+                return;
+            }
+
+            const randomIndex = Math.floor(Math.random() * options.length);
+            const decision = options[randomIndex];
+
+            showResult(decision, `Dipilih dari ${options.length} pilihan`);
+        }
+
+        function generatePasswords() {
+            const length = parseInt(document.getElementById('passwordLength').value) || 12;
+            const count = parseInt(document.getElementById('passwordCount').value) || 1;
+            
+            const includeUppercase = document.getElementById('includeUppercase').checked;
+            const includeLowercase = document.getElementById('includeLowercase').checked;
+            const includeNumbers = document.getElementById('includeNumbers').checked;
+            const includeSymbols = document.getElementById('includeSymbols').checked;
+
+            let charset = '';
+            if (includeUppercase) charset += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            if (includeLowercase) charset += 'abcdefghijklmnopqrstuvwxyz';
+            if (includeNumbers) charset += '0123456789';
+            if (includeSymbols) charset += '!@#$%^&*()_+-=[]{}|;:,.<>?';
+
+            if (charset === '') {
+                alert('Mohon pilih minimal satu jenis karakter');
+                return;
+            }
+
+            const passwords = [];
+            for (let i = 0; i < count; i++) {
+                let password = '';
+                for (let j = 0; j < length; j++) {
+                    password += charset.charAt(Math.floor(Math.random() * charset.length));
+                }
+                passwords.push(password);
+            }
+
+            if (passwords.length === 1) {
+                showResult(passwords[0], `Panjang: ${length} karakter`);
+            } else {
+                showListResult(passwords, `${count} password dengan panjang ${length} karakter`);
+            }
+        }
+
+        function showResult(result, meta) {
+            const resultContainer = document.getElementById('result-container');
+            const resultDisplay = document.getElementById('result-display');
+            const resultMeta = document.getElementById('result-meta');
+
+            resultDisplay.innerHTML = result;
+            resultMeta.innerHTML = meta;
+            resultContainer.classList.add('show');
+
+            // Scroll to result
+            resultContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        function showListResult(results, meta) {
+            const resultContainer = document.getElementById('result-container');
+            const resultDisplay = document.getElementById('result-display');
+            const resultMeta = document.getElementById('result-meta');
+
+            let html = '<div class="result-list">';
+            results.forEach((result, index) => {
+                html += `
+                    <div class="result-item">
+                        <span>${result}</span>
+                        <div class="result-number">${index + 1}</div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+
+            resultDisplay.innerHTML = html;
+            resultMeta.innerHTML = meta;
+            resultContainer.classList.add('show');
+
+            // Scroll to result
+            resultContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        function showTeamResult(teams) {
+            const resultContainer = document.getElementById('result-container');
+            const resultDisplay = document.getElementById('result-display');
+            const resultMeta = document.getElementById('result-meta');
+
+            let html = '<div class="result-list">';
+            teams.forEach((team, index) => {
+                html += `
+                    <div class="result-item" style="flex-direction: column; align-items: flex-start; gap: 10px;">
+                        <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
+                            <strong>Tim ${index + 1}</strong>
+                            <div class="result-number">${team.length}</div>
+                        </div>
+                        <div style="color: var(--muted-gray); font-size: 0.9rem;">
+                            ${team.join(', ')}
+                        </div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+
+            resultDisplay.innerHTML = html;
+            resultMeta.innerHTML = `${teams.length} tim dibuat`;
+            resultContainer.classList.add('show');
+
+            // Scroll to result
+            resultContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        function generateAgain() {
+            switch(currentTab) {
+                case 'number':
+                    generateNumbers();
+                    break;
+                case 'list':
+                    generateFromList();
+                    break;
+                case 'team':
+                    generateTeams();
+                    break;
+                case 'decision':
+                    makeDecision();
+                    break;
+                case 'password':
+                    generatePasswords();
+                    break;
+            }
+        }
+
+        function goBack() {
+            if (confirm('Kembali ke halaman utama?')) {
+                // In real app, this would navigate back
+                alert('Dalam implementasi nyata, ini akan kembali ke halaman index');
+            }
+        }
+
+        // Add some example data
+        document.getElementById('listItems').value = `Pizza\nBurger\nSushi\nPasta\nSalad\nTacos`;
+        document.getElementById('teamPlayers').value = `Alice\nBob\nCharlie\nDiana\nEve\nFrank`;
+        document.getElementById('decisionOptions').value = `Ya, lakukan sekarang\nTidak, tunggu nanti\nMungkin, pertimbangkan lagi\nTanya orang lain dulu`;
+    </script>
+</body>
+</html>
