@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Impostor - 4 Pemain</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            text-align: center;
+            max-width: 500px;
+            width: 100%;
+            backdrop-filter: blur(10px);
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .game-setup {
+            display: block;
+        }
+
+        .game-setup.hidden {
+            display: none;
+        }
+
+        .player-reveal {
+            display: none;
+        }
+
+        .player-reveal.active {
+            display: block;
+        }
+
+        .start-btn {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.2em;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+        }
+
+        .start-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+        }
+
+        .player-card {
+            background: linear-gradient(45deg, #FF6B6B, #4ECDC4);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin: 20px 0;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .player-name {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .keyword {
+            font-size: 2em;
+            font-weight: bold;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+        }
+
+        .next-btn, .restart-btn {
+            background: linear-gradient(45deg, #2196F3, #21CBF3);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 1.1em;
+            border-radius: 25px;
+            cursor: pointer;
+            margin: 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(33, 150, 243, 0.3);
+        }
+
+        .next-btn:hover, .restart-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(33, 150, 243, 0.4);
+        }
+
+        .keyword-hidden {
+            background: rgba(0, 0, 0, 0.8);
+            color: transparent;
+            user-select: none;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .keyword-hidden:before {
+            content: "🔒 KLIK UNTUK MELIHAT";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 0.6em;
+            font-weight: normal;
+        }
+
+        .instructions {
+            background: rgba(255, 235, 59, 0.2);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 4px solid #FFC107;
+        }
+
+        .instructions h3 {
+            color: #F57F17;
+            margin-bottom: 10px;
+        }
+
+        .instructions p {
+            color: #333;
+            line-height: 1.6;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {
+                transform: translateY(0);
+            }
+            40% {
+                transform: translateY(-10px);
+            }
+            60% {
+                transform: translateY(-5px);
+            }
+        }
+
+        .bounce {
+            animation: bounce 2s infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🕵️ Game Impostor</h1>
+        <p class="subtitle">Permainan Tebak Impostor untuk 4 Orang</p>
+        
+        <div id="gameSetup" class="game-setup">
+            <div class="instructions">
+                <h3>📋 Cara Bermain:</h3>
+                <p>• 4 pemain akan mendapat keyword secara bergiliran<br>
+                • 3 pemain mendapat keyword yang sama<br>
+                • 1 pemain (impostor) mendapat keyword berbeda<br>
+                • Diskusikan dan tebak siapa impostornya!</p>
+            </div>
+            <button class="start-btn bounce" onclick="startGame()">
+                🎲 Mulai Permainan
+            </button>
+        </div>
+
+        <div id="playerReveal" class="player-reveal">
+            <div class="player-card">
+                <div class="player-name" id="currentPlayer">Pemain 1</div>
+                <div class="keyword keyword-hidden" id="playerKeyword" onclick="revealKeyword()">
+                    KEYWORD
+                </div>
+                <p style="margin: 15px 0; color: #666;">Klik keyword untuk melihat</p>
+            </div>
+            <button class="next-btn" id="nextBtn" onclick="nextPlayer()" style="display: none;">
+                ➡️ Pemain Selanjutnya
+            </button>
+            <button class="restart-btn" id="restartBtn" onclick="restartGame()" style="display: none;">
+                🔄 Main Lagi
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const keywords = [
+            // Kategori Hewan
+            ['Kucing', 'Anjing', 'Burung', 'Ikan'],
+            ['Singa', 'Harimau', 'Gajah', 'Jerapah'],
+            ['Ayam', 'Bebek', 'Kambing', 'Sapi'],
+            
+            // Kategori Makanan
+            ['Nasi', 'Mie', 'Roti', 'Kentang'],
+            ['Apel', 'Pisang', 'Jeruk', 'Mangga'],
+            ['Teh', 'Kopi', 'Susu', 'Air'],
+            
+            // Kategori Profesi
+            ['Dokter', 'Guru', 'Polisi', 'Pilot'],
+            ['Chef', 'Petani', 'Supir', 'Penjahit'],
+            
+            // Kategori Olahraga
+            ['Sepak Bola', 'Basket', 'Voli', 'Tennis'],
+            ['Renang', 'Lari', 'Bersepeda', 'Golf'],
+            
+            // Kategori Transportasi
+            ['Mobil', 'Motor', 'Pesawat', 'Kapal'],
+            ['Kereta', 'Bus', 'Becak', 'Sepeda'],
+            
+            // Kategori Warna
+            ['Merah', 'Biru', 'Hijau', 'Kuning'],
+            ['Hitam', 'Putih', 'Ungu', 'Orange'],
+            
+            // Kategori Benda
+            ['Meja', 'Kursi', 'Tempat Tidur', 'Lemari'],
+            ['Buku', 'Pensil', 'Kertas', 'Tas'],
+            
+            // Kategori Cuaca
+            ['Hujan', 'Panas', 'Dingin', 'Berawan'],
+            
+            // Kategori Tempat
+            ['Sekolah', 'Rumah Sakit', 'Pasar', 'Mall'],
+            ['Pantai', 'Gunung', 'Hutan', 'Sungai']
+        ];
+
+        let currentPlayerIndex = 0;
+        let gameKeywords = [];
+        let keywordRevealed = false;
+
+        function startGame() {
+            // Pilih set keyword secara random
+            const selectedSet = keywords[Math.floor(Math.random() * keywords.length)];
+            
+            // Shuffle array untuk menentukan impostor secara random
+            const shuffledPlayers = [0, 1, 2, 3].sort(() => Math.random() - 0.5);
+            const impostorIndex = shuffledPlayers[0];
+            
+            // Tentukan keyword normal dan impostor
+            const normalKeyword = selectedSet[0];
+            const impostorKeyword = selectedSet[1];
+            
+            // Assign keywords ke setiap pemain
+            gameKeywords = [];
+            for (let i = 0; i < 4; i++) {
+                if (i === impostorIndex) {
+                    gameKeywords.push(impostorKeyword);
+                } else {
+                    gameKeywords.push(normalKeyword);
+                }
+            }
+            
+            // Reset game state
+            currentPlayerIndex = 0;
+            keywordRevealed = false;
+            
+            // Show player reveal screen
+            document.getElementById('gameSetup').classList.add('hidden');
+            document.getElementById('playerReveal').classList.add('active');
+            
+            showCurrentPlayer();
+        }
+
+        function showCurrentPlayer() {
+            const playerName = `Pemain ${currentPlayerIndex + 1}`;
+            const keyword = gameKeywords[currentPlayerIndex];
+            
+            document.getElementById('currentPlayer').textContent = playerName;
+            document.getElementById('playerKeyword').textContent = keyword;
+            document.getElementById('playerKeyword').classList.add('keyword-hidden');
+            
+            // Reset button visibility
+            document.getElementById('nextBtn').style.display = 'none';
+            document.getElementById('restartBtn').style.display = 'none';
+            keywordRevealed = false;
+        }
+
+        function revealKeyword() {
+            if (!keywordRevealed) {
+                document.getElementById('playerKeyword').classList.remove('keyword-hidden');
+                keywordRevealed = true;
+                
+                // Show appropriate button
+                if (currentPlayerIndex < 3) {
+                    document.getElementById('nextBtn').style.display = 'inline-block';
+                } else {
+                    document.getElementById('restartBtn').style.display = 'inline-block';
+                }
+            }
+        }
+
+        function nextPlayer() {
+            currentPlayerIndex++;
+            showCurrentPlayer();
+        }
+
+        function restartGame() {
+            currentPlayerIndex = 0;
+            gameKeywords = [];
+            keywordRevealed = false;
+            
+            document.getElementById('gameSetup').classList.remove('hidden');
+            document.getElementById('playerReveal').classList.remove('active');
+        }
+    </script>
+</body>
+</html>

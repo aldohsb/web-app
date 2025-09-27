@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aldohas Garden - Web App Collection</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:wght@400;600&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-sage: #9CAF88;
+            --secondary-sage: #B8C5A6;
+            --soft-cream: #F7F6F3;
+            --warm-white: #FEFDFB;
+            --charcoal: #2C3E2D;
+            --muted-gray: #6B7461;
+            --accent-gold: #D4B886;
+            --shadow-light: rgba(156, 175, 136, 0.15);
+            --shadow-medium: rgba(44, 62, 45, 0.08);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, var(--warm-white) 0%, var(--soft-cream) 100%);
+            color: var(--charcoal);
+            line-height: 1.6;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .zen-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Floating Elements */
+        .floating-element {
+            position: absolute;
+            opacity: 0.1;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .circle-1 {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: var(--primary-sage);
+            top: 10%;
+            right: -100px;
+            animation: float 8s ease-in-out infinite;
+        }
+
+        .circle-2 {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: var(--secondary-sage);
+            bottom: 20%;
+            left: -75px;
+            animation: float 6s ease-in-out infinite reverse;
+        }
+
+        .circle-3 {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: var(--accent-gold);
+            top: 60%;
+            right: 10%;
+            animation: float 10s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(180deg); }
+        }
+
+        /* Header */
+        .header {
+            padding: 60px 0 40px;
+            text-align: center;
+            position: relative;
+            z-index: 10;
+        }
+
+        .zen-title {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            font-weight: 600;
+            color: var(--charcoal);
+            margin-bottom: 20px;
+            opacity: 0;
+            animation: fadeInUp 1s ease-out 0.3s forwards;
+        }
+
+        .zen-subtitle {
+            font-size: 1.2rem;
+            color: var(--muted-gray);
+            font-weight: 300;
+            max-width: 600px;
+            margin: 0 auto 40px;
+            opacity: 0;
+            animation: fadeInUp 1s ease-out 0.6s forwards;
+        }
+
+        .zen-divider {
+            width: 80px;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--primary-sage), transparent);
+            margin: 0 auto 60px;
+            opacity: 0;
+            animation: fadeInUp 1s ease-out 0.9s forwards;
+        }
+
+        /* Game Cards */
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 40px;
+            padding: 40px 0;
+            position: relative;
+            z-index: 10;
+        }
+
+        .game-card {
+            background: var(--warm-white);
+            border-radius: 20px;
+            padding: 40px 30px;
+            text-align: center;
+            box-shadow: 0 8px 32px var(--shadow-light);
+            border: 1px solid rgba(156, 175, 136, 0.1);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            opacity: 0;
+            transform: translateY(30px);
+            animation: cardFadeIn 0.8s ease-out forwards;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .game-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 60px var(--shadow-medium);
+            border-color: var(--primary-sage);
+        }
+
+        .game-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-sage), var(--accent-gold));
+            transform: scaleX(0);
+            transition: transform 0.4s ease;
+        }
+
+        .game-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .game-card:nth-child(1) {
+            animation-delay: 0.2s;
+        }
+
+        .game-card:nth-child(2) {
+            animation-delay: 0.4s;
+        }
+
+        .game-card:nth-child(3) {
+            animation-delay: 0.6s;
+        }
+
+        .game-icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            display: block;
+            filter: grayscale(0.3);
+            transition: filter 0.3s ease;
+        }
+
+        .game-card:hover .game-icon {
+            filter: grayscale(0);
+        }
+
+        .game-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: var(--charcoal);
+            margin-bottom: 15px;
+        }
+
+        .game-description {
+            color: var(--muted-gray);
+            margin-bottom: 30px;
+            font-weight: 300;
+            line-height: 1.7;
+        }
+
+        .game-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding: 15px 20px;
+            background: rgba(156, 175, 136, 0.05);
+            border-radius: 12px;
+            font-size: 0.9rem;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--muted-gray);
+        }
+
+        .zen-button {
+            background: linear-gradient(135deg, var(--primary-sage), var(--secondary-sage));
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            box-shadow: 0 4px 20px rgba(156, 175, 136, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .zen-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .zen-button:hover::before {
+            left: 100%;
+        }
+
+        .zen-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(156, 175, 136, 0.4);
+        }
+
+        /* Footer */
+        .zen-footer {
+            text-align: center;
+            padding: 80px 0 40px;
+            color: var(--muted-gray);
+            font-size: 0.9rem;
+            position: relative;
+            z-index: 10;
+        }
+
+        .footer-divider {
+            width: 200px;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--primary-sage), transparent);
+            margin: 0 auto 30px;
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes cardFadeIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .games-grid {
+                grid-template-columns: 1fr;
+                gap: 30px;
+            }
+
+            .game-card {
+                padding: 30px 20px;
+            }
+
+            .zen-title {
+                font-size: 2.5rem;
+            }
+
+            .game-meta {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+
+        /* Zen Elements */
+        .zen-ornament {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            border: 2px solid var(--primary-sage);
+            border-radius: 50%;
+            opacity: 0.1;
+            top: 20%;
+            left: 5%;
+            animation: rotate 20s linear infinite;
+        }
+
+        .zen-ornament::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 20px;
+            height: 20px;
+            background: var(--accent-gold);
+            border-radius: 50%;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Floating Elements -->
+    <div class="floating-element circle-1"></div>
+    <div class="floating-element circle-2"></div>
+    <div class="floating-element circle-3"></div>
+    <div class="zen-ornament"></div>
+
+    <div class="zen-container">
+        <!-- Header -->
+        <header class="header">
+            <h1 class="zen-title">Aldohas Web App Garden</h1>
+            <p class="zen-subtitle">
+                Taman digital berisi aneka web app eksperimental—mulai dari alat pribadi, proyek belajar, hingga ide iseng yang tumbuh liar. Setiap aplikasi ibarat tanaman unik: ada yang berguna, ada yang sekadar seru, semuanya tumbuh dari rasa penasaran.
+            </p>
+            <div class="zen-divider"></div>
+        </header>
+
+        <!-- Games Grid -->
+        <main class="games-grid">
+            <div class="game-card">
+                <span class="game-icon">🕵️</span>
+                <h2 class="game-title">Game Impostor</h2>
+                <p class="game-description">
+                    Permainan tebak impostor untuk 4 pemain. Tiga pemain mendapat keyword yang sama, 
+                    satu pemain mendapat keyword berbeda. Diskusikan dan temukan siapa impostornya!
+                </p>
+            
+                <a href="#" class="zen-button" onclick="playImpostorGame()">Lihat</a>
+            </div>
+
+            <div class="game-card">
+                <span class="game-icon">🎲</span>
+                <h2 class="game-title">Random Generator</h2>
+                <p class="game-description">
+                    Alat generator acak serbaguna untuk berbagai keperluan. Cocok untuk membuat 
+                    keputusan, memilih tim, atau menentukan urutan dalam permainan.
+                </p>
+             
+                <a href="#" class="zen-button" onclick="comingSoon()">Lihat</a>
+            </div>
+
+            <div class="game-card">
+                <span class="game-icon">🧩</span>
+                <h2 class="game-title">Mind Games</h2>
+                <p class="game-description">
+                    Koleksi teka-teki dan permainan asah otak yang dirancang untuk melatih 
+                    konsentrasi dan kemampuan berpikir dalam suasana yang tenang.
+                </p>
+            
+                <a href="#" class="zen-button" onclick="comingSoon()">Lihat</a>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="zen-footer">
+            <div class="footer-divider"></div>
+            <p>Dibuat dengan 🤍 untuk pengalaman bermain yang menenangkan</p>
+            <p style="margin-top: 10px; font-size: 0.8rem; opacity: 0.7;">
+                Zen Garden Games © 2025 - Ketenangan dalam Setiap Permainan
+            </p>
+        </footer>
+    </div>
+
+    <script>
+        // Smooth scroll animation observer
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        // Observe all game cards
+        document.querySelectorAll('.game-card').forEach(card => {
+            observer.observe(card);
+        });
+
+
+    
+        // Add subtle parallax effect to floating elements
+        window.addEventListener('scroll', () => {
+            const scrolled = window.pageYOffset;
+            const elements = document.querySelectorAll('.floating-element');
+            
+            elements.forEach((el, index) => {
+                const speed = 0.5 + (index * 0.1);
+                el.style.transform = `translateY(${scrolled * speed}px)`;
+            });
+        });
+
+        // Add gentle breathing animation to cards on hover
+        document.querySelectorAll('.game-card').forEach(card => {
+            card.addEventListener('mouseenter', () => {
+                card.style.animation = 'none';
+                setTimeout(() => {
+                    card.style.animation = 'breathe 2s ease-in-out infinite';
+                }, 10);
+            });
+            
+            card.addEventListener('mouseleave', () => {
+                card.style.animation = 'none';
+            });
+        });
+
+        // Add CSS for breathing animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes breathe {
+                0%, 100% { transform: translateY(-8px) scale(1); }
+                50% { transform: translateY(-8px) scale(1.02); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
