@@ -1,0 +1,106 @@
+# ============================================
+# SHOPORA BACKEND - GITIGNORE
+# ============================================
+# File dan folder yang tidak akan di-commit ke Git
+
+# ============================================
+# DEPENDENCIES
+# ============================================
+# Node modules - folder berisi semua package npm
+node_modules/
+
+# Package lock files (pilih salah satu yang Anda gunakan)
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# ============================================
+# ENVIRONMENT VARIABLES
+# ============================================
+# File .env berisi credentials sensitif - JANGAN COMMIT!
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# ============================================
+# UPLOADS & STORAGE
+# ============================================
+# Folder uploads berisi file yang di-upload user
+uploads/*
+# Tapi tetap track folder structure-nya
+!uploads/.gitkeep
+
+# ============================================
+# LOGS
+# ============================================
+# File log dari aplikasi
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# ============================================
+# OPERATING SYSTEM FILES
+# ============================================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Linux
+*~
+
+# ============================================
+# IDE & EDITOR
+# ============================================
+# Visual Studio Code
+.vscode/
+*.code-workspace
+
+# WebStorm / IntelliJ IDEA
+.idea/
+*.iml
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# ============================================
+# TEMPORARY FILES
+# ============================================
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
+# ============================================
+# BUILD & DIST
+# ============================================
+# Build output
+dist/
+build/
+
+# ============================================
+# TESTING
+# ============================================
+# Coverage directory used by testing tools
+coverage/
+.nyc_output/
+
+# ============================================
+# MISC
+# ============================================
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
