@@ -1,0 +1,67 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-zen-200;
+  }
+
+  body {
+    @apply min-h-screen antialiased bg-gradient-to-br from-zen-50 via-bamboo-50 to-zen-100 font-main text-zen-900;
+  }
+
+  ::-webkit-scrollbar {
+    @apply w-2;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-zen-100;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply rounded-full bg-zen-400;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-zen-500;
+  }
+}
+
+@layer components {
+  .zen-card {
+    @apply p-6 transition-all duration-300 border shadow-lg bg-white/80 backdrop-blur-sm rounded-2xl border-zen-200/50 hover:shadow-xl hover:border-zen-300/50;
+  }
+
+  .zen-button {
+    @apply px-6 py-3 font-medium transition-all duration-300 rounded-xl active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100;
+  }
+
+  .zen-button-primary {
+    @apply text-white shadow-md zen-button bg-gradient-to-r from-zen-600 to-bamboo-600 hover:from-zen-700 hover:to-bamboo-700 hover:shadow-lg;
+  }
+
+  .zen-button-secondary {
+    @apply border-2 zen-button bg-white/90 text-zen-700 border-zen-300 hover:bg-zen-50 hover:border-zen-400;
+  }
+
+  .zen-input {
+    @apply w-full px-4 py-3 transition-all duration-300 border-2 rounded-xl border-zen-200 bg-white/90 backdrop-blur-sm focus:outline-none focus:border-zen-500 focus:ring-2 focus:ring-zen-200;
+  }
+
+  .japanese-text {
+    @apply font-bold font-japanese;
+  }
+}
+
+@layer utilities {
+  .text-shadow-sm {
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  }
+
+  .zen-pattern {
+    background-image: 
+      radial-gradient(circle at 20% 50%, rgba(107, 117, 86, 0.03) 0%, transparent 50%),
+      radial-gradient(circle at 80% 80%, rgba(106, 124, 95, 0.03) 0%, transparent 50%);
+  }
+}
