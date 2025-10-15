@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Grid3x3, User, Menu, Star } from 'lucide-react';
+import { Home, Grid3x3, User, Menu, Star, LogIn } from 'lucide-react';
 import { useUserStore } from '@/store/useUserStore';
 import clsx from 'clsx';
 
@@ -11,6 +11,7 @@ const Header = ({ onMenuClick }) => {
     { path: '/', icon: Home, label: 'Home' },
     { path: '/levels', icon: Grid3x3, label: 'Levels' },
     { path: '/profile', icon: User, label: 'Profile' },
+    { path: '/auth', icon: LogIn, label: 'Account' },
   ];
   
   const isActive = (path) => {

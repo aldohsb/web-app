@@ -59,7 +59,25 @@ export const getOrCreateUser = asyncHandler(async (req, res) => {
       userId,
       currentLevel: 1,
       unlockedLevels: [1],
+      levelProgress: [],
+      completedLevels: [],
+      totalStars: 0,
     });
+  }
+  
+  // Ensure level 1 is always unlocked
+  if (!progress) {
+    progress = await Progress.create({
+      userId,
+      currentLevel: 1,
+      unlockedLevels: [1],
+      levelProgress: [],
+      completedLevels: [],
+      totalStars: 0,
+    });
+  } else if (!progress.unlockedLevels.includes(1)) {
+    progress.unlockedLevels.unshift(1);
+    await progress.save();
   }
   
   // Update last active

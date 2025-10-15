@@ -58,8 +58,23 @@ const Quiz = () => {
   }, [answers.length, showComplete, getResults, handleComplete]);
   
   const handleAnswerSelect = async (answer) => {
+    console.log(`Answer selected: ${answer}`);
     await handleAnswer(answer);
   };
+  
+  // Auto-advance to next question
+  useEffect(() => {
+    if (showFeedback && !isAnswering) {
+      const timer = setTimeout(() => {
+        const hasNext = handleNextQuestion();
+        if (!hasNext) {
+          console.log('Quiz completed - 10 questions answered');
+        }
+      }, 2000); // Wait 2 seconds before next question
+      
+      return () => clearTimeout(timer);
+    }
+  }, [showFeedback, isAnswering]);
   
   const handleExit = () => {
     setShowExitModal(true);
@@ -97,7 +112,7 @@ const Quiz = () => {
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen gap-4">
-        <p className="text-xl text-red-600">Failed to load quiz</p>
+        <p className="text-xl text-red-600">Error: {error}</p>
         <Button onClick={() => navigate('/levels')}>Back to Levels</Button>
       </div>
     );

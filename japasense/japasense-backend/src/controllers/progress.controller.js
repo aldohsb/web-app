@@ -15,12 +15,21 @@ export const getProgress = asyncHandler(async (req, res) => {
   let progress = await Progress.findOne({ userId });
   
   if (!progress) {
-    // Create initial progress if not exists
+    // Create initial progress with level 1 unlocked
     progress = await Progress.create({
       userId,
       currentLevel: 1,
       unlockedLevels: [1],
+      levelProgress: [],
+      completedLevels: [],
+      totalStars: 0,
     });
+  }
+  
+  // Ensure level 1 is always unlocked
+  if (!progress.unlockedLevels.includes(1)) {
+    progress.unlockedLevels.unshift(1);
+    await progress.save();
   }
   
   sendSuccess(res, {

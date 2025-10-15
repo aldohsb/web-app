@@ -37,7 +37,6 @@ const progressSchema = new mongoose.Schema({
     type: String,
     required: true,
     unique: true,
-    index: true,
   },
   currentLevel: {
     type: Number,
@@ -68,17 +67,33 @@ const progressSchema = new mongoose.Schema({
   timestamps: true,
 });
 
-// Indexes
-progressSchema.index({ userId: 1 });
+// Index untuk performance (userId sudah unique, jadi tidak perlu index lagi)
 progressSchema.index({ 'levelProgress.level': 1 });
 
 // Initialize with level 1 unlocked
 progressSchema.pre('save', function(next) {
-  if (this.isNew && this.unlockedLevels.length === 0) {
-    this.unlockedLevels = [1];
+  if (this.isNew) {
+    if (this.unlockedLevels.length === 0) {
+      this.unlockedLevels = [1];
+    }
+    if (!this.unlockedLevels.includes(1)) {
+      this.unlockedLevels.unshift(1);
+    }
   }
   next();
 });
+
+// Static method to create new progress with level 1 unlocked
+progressSchema.statics.createNew = async function(userId) {
+  return this.create({
+    userId,
+    currentLevel: 1,
+    unlockedLevels: [1],
+    levelProgress: [],
+    completedLevels: [],
+    totalStars: 0,
+  });
+};
 
 // Get progress for specific level
 progressSchema.methods.getLevelProgress = function(level) {

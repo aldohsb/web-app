@@ -98,6 +98,20 @@ const Profile = () => {
         <div className="grid grid-cols-1 gap-6 mb-8 md:grid-cols-2 lg:grid-cols-4">
           <Card>
             <div className="flex items-center gap-4">
+              <div className="p-4 bg-zen-100 rounded-xl">
+                <Target className="w-8 h-8 text-zen-600" />
+              </div>
+              <div>
+                <p className="mb-1 text-sm text-zen-600">Current Level</p>
+                <p className="text-3xl font-bold text-zen-800">
+                  {progress?.currentLevel || 1}
+                </p>
+              </div>
+            </div>
+          </Card>
+          
+          <Card>
+            <div className="flex items-center gap-4">
               <div className="p-4 bg-green-100 rounded-xl">
                 <Trophy className="w-8 h-8 text-green-600" />
               </div>
@@ -140,7 +154,7 @@ const Profile = () => {
         </div>
         
         {/* Detailed Stats */}
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-6 mb-8 lg:grid-cols-2">
           {/* Progress Overview */}
           <Card>
             <Card.Header>
@@ -313,17 +327,4 @@ const Profile = () => {
   );
 };
 
-export default Profile;<div className="flex items-center gap-4">
-              <div className="p-4 bg-zen-100 rounded-xl">
-                <Target className="w-8 h-8 text-zen-600" />
-              </div>
-              <div>
-                <p className="mb-1 text-sm text-zen-600">Current Level</p>
-                <p className="text-3xl font-bold text-zen-800">
-                  {progress?.currentLevel || 1}
-                </p>
-              </div>
-            </div>
-          </Card>
-          
-          <Card></Card>
+export default Profile;
