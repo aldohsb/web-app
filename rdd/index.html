@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>RedditPX Clone</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.4.12/hls.min.js"></script>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    :root {
+      --bg:#0d0d0d; --surface:#1a1a1a; --border:#2a2a2a;
+      --text:#e0e0e0; --muted:#888; --accent:#ff4500; --thumb:210px;
+    }
+    body { background:var(--bg); color:var(--text); font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; height:100vh; overflow:hidden; display:flex; flex-direction:column; }
+
+    /* ── TOP BAR ── */
+    #topbar { display:flex; align-items:center; gap:7px; padding:8px 12px; background:var(--surface); border-bottom:1px solid var(--border); flex-shrink:0; flex-wrap:wrap; }
+    .logo { font-weight:800; font-size:17px; color:var(--accent); white-space:nowrap; }
+
+    /* Multi-sub input area */
+    #sub-area { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+    .sub-tag {
+      display:inline-flex; align-items:center; gap:4px;
+      background:var(--bg); border:1px solid var(--border);
+      color:var(--text); padding:3px 8px 3px 10px; border-radius:20px;
+      font-size:12px; font-weight:600;
+    }
+    .sub-tag .rm { background:none; border:none; color:var(--muted); cursor:pointer; font-size:13px; padding:0 1px; line-height:1; }
+    .sub-tag .rm:hover { color:#ff6b6b; }
+    #sub-input { background:var(--bg); border:1px solid var(--border); color:var(--text); padding:5px 10px; border-radius:20px; font-size:13px; width:120px; outline:none; transition:border-color .2s; }
+    #sub-input:focus { border-color:var(--accent); }
+    #sub-input::placeholder { color:var(--muted); }
+    #add-sub-btn { background:rgba(255,69,0,.15); border:1px solid var(--accent); color:var(--accent); padding:4px 10px; border-radius:20px; font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap; }
+    #add-sub-btn:hover { background:rgba(255,69,0,.3); }
+
+    #sort-sel { background:var(--bg); border:1px solid var(--border); color:var(--text); padding:5px 8px; border-radius:20px; font-size:13px; outline:none; cursor:pointer; }
+    #go-btn { background:var(--accent); color:#fff; border:none; padding:6px 16px; border-radius:20px; font-size:13px; font-weight:700; cursor:pointer; transition:opacity .2s; white-space:nowrap; }
+    #go-btn:hover { opacity:.85; }
+
+    /* Hide-seen toggle */
+    #hide-seen-btn {
+      background:var(--bg); border:1px solid var(--border); color:var(--muted);
+      padding:5px 10px; border-radius:20px; font-size:12px; cursor:pointer;
+      white-space:nowrap; transition:all .2s; display:flex; align-items:center; gap:5px;
+    }
+    #hide-seen-btn.active { border-color:#4caf50; color:#4caf50; background:rgba(76,175,80,.1); }
+    #hide-seen-btn:hover { border-color:var(--text); color:var(--text); }
+
+    #clear-seen-btn {
+      background:none; border:none; color:var(--muted); font-size:11px; cursor:pointer; padding:4px 6px;
+    }
+    #clear-seen-btn:hover { color:#ff6b6b; }
+
+    .spacer { flex:1; min-width:8px; }
+    #status { font-size:12px; color:var(--muted); white-space:nowrap; }
+
+    /* ── GRID ── */
+    #grid-wrap { flex:1; overflow-y:auto; padding:10px; }
+    #grid-wrap::-webkit-scrollbar { width:5px; }
+    #grid-wrap::-webkit-scrollbar-thumb { background:#333; border-radius:3px; }
+    #grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(var(--thumb),1fr)); gap:5px; }
+
+    .card { position:relative; aspect-ratio:1; background:var(--surface); border-radius:6px; overflow:hidden; cursor:pointer; border:2px solid transparent; transition:border-color .15s,transform .15s,opacity .2s; }
+    .card:hover { border-color:var(--accent); transform:scale(1.025); }
+    .card.active-card { border-color:#fff; }
+    .card.seen { opacity:.35; }
+    .card.seen:hover { opacity:.7; }
+    .card img,.card video { width:100%; height:100%; object-fit:cover; display:block; }
+    .badge { position:absolute; top:5px; right:5px; background:rgba(0,0,0,.75); color:#fff; font-size:10px; padding:2px 6px; border-radius:10px; font-weight:700; }
+    .score { position:absolute; bottom:5px; left:5px; background:rgba(0,0,0,.7); color:#fff; font-size:10px; padding:2px 7px; border-radius:10px; }
+    .sub-label { position:absolute; top:5px; left:5px; background:rgba(255,69,0,.8); color:#fff; font-size:9px; padding:2px 6px; border-radius:10px; font-weight:700; display:none; }
+    .multi-mode .sub-label { display:block; }
+    /* seen eye icon overlay */
+    .seen-dot { position:absolute; top:5px; right:5px; background:rgba(76,175,80,.85); color:#fff; font-size:9px; padding:2px 5px; border-radius:10px; }
+
+    #load-more { display:none; margin:14px auto; background:var(--surface); border:1px solid var(--border); color:var(--text); padding:9px 26px; border-radius:20px; cursor:pointer; font-size:14px; transition:border-color .2s; }
+    #load-more:hover { border-color:var(--accent); }
+
+    /* ── LOADER ── */
+    #loader { display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); z-index:999; flex-direction:column; align-items:center; gap:10px; color:var(--muted); font-size:13px; }
+    #loader.on { display:flex; }
+    .spin { width:36px; height:36px; border:3px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin .7s linear infinite; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+
+    /* ══ VIEWER ══ */
+    #viewer { display:none; position:fixed; inset:0; background:#000; z-index:500; flex-direction:column; }
+    #viewer.open { display:flex; }
+
+    #vtop {
+      position:absolute; top:0; left:0; right:0;
+      display:flex; align-items:center; gap:10px;
+      padding:10px 16px;
+      background:linear-gradient(to bottom, rgba(0,0,0,.85) 0%, transparent 100%);
+      z-index:20; opacity:0; transition:opacity .25s; pointer-events:none;
+    }
+    #viewer.open:hover #vtop, #viewer.show-ui #vtop { opacity:1; pointer-events:all; }
+
+    #vtitle { flex:1; font-size:13px; color:#eee; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; text-shadow:0 1px 4px #000; }
+    .vmeta { display:flex; gap:12px; font-size:12px; color:#bbb; white-space:nowrap; }
+    .vbtn { background:rgba(255,255,255,.15); border:none; color:#fff; padding:5px 12px; border-radius:20px; cursor:pointer; font-size:13px; white-space:nowrap; text-decoration:none; display:inline-flex; align-items:center; transition:background .2s; backdrop-filter:blur(4px); }
+    .vbtn:hover { background:rgba(255,255,255,.3); }
+    .vbtn.red { background:rgba(200,30,30,.5); }
+    .vbtn.red:hover { background:rgba(255,50,50,.8); }
+    .vbtn.green { background:rgba(30,160,30,.4); }
+    .vbtn.green:hover { background:rgba(50,200,50,.6); }
+
+    #vstage { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; overflow:hidden; }
+
+    #media-wrap.is-image { width:100%; height:100%; display:flex; align-items:center; justify-content:center; }
+    #media-wrap.is-image img { max-width:100%; max-height:100%; object-fit:contain; display:block; }
+    #media-wrap.is-video { width:100%; height:100%; display:flex; align-items:center; justify-content:center; }
+    #media-wrap.is-video video { width:100%; height:100%; object-fit:cover; display:block; background:#000; }
+    #media-wrap.is-video iframe { width:100%; height:100%; border:none; background:#000; }
+
+    .arrow { position:absolute; top:50%; transform:translateY(-50%); background:rgba(0,0,0,.45); border:none; color:#fff; font-size:36px; padding:18px 12px; cursor:pointer; border-radius:8px; transition:background .2s,opacity .25s; z-index:20; line-height:1; user-select:none; opacity:0; }
+    #viewer.open:hover .arrow, #viewer.show-ui .arrow { opacity:1; }
+    .arrow:hover { background:rgba(255,69,0,.75); }
+    #prev { left:8px; } #next { right:8px; }
+
+    #vbot {
+      position:absolute; bottom:0; left:0; right:0;
+      padding:10px 16px;
+      background:linear-gradient(to top, rgba(0,0,0,.85) 0%, transparent 100%);
+      font-size:12px; color:#aaa; display:flex; align-items:center; gap:12px;
+      z-index:20; flex-wrap:wrap; opacity:0; transition:opacity .25s; pointer-events:none;
+    }
+    #viewer.open:hover #vbot, #viewer.show-ui #vbot { opacity:1; pointer-events:all; }
+
+    kbd { background:rgba(255,255,255,.12); padding:1px 6px; border-radius:4px; font-size:11px; color:#ddd; font-family:monospace; }
+    #vcounter { margin-left:auto; color:#fff; font-weight:700; font-size:13px; }
+
+    #zoom-btn { position:absolute; bottom:56px; right:16px; background:rgba(0,0,0,.5); border:none; color:#fff; width:36px; height:36px; border-radius:50%; cursor:pointer; font-size:16px; display:flex; align-items:center; justify-content:center; z-index:20; transition:background .2s,opacity .25s; opacity:0; }
+    #viewer.open:hover #zoom-btn, #viewer.show-ui #zoom-btn { opacity:1; }
+    #zoom-btn:hover { background:rgba(255,69,0,.7); }
+
+    .media-error { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; height:100%; color:#aaa; text-align:center; padding:20px; }
+    .media-error .err-icon { font-size:48px; }
+    .media-error a { color:var(--accent); text-decoration:none; font-size:14px; }
+
+    /* sub badge in viewer */
+    #v-sub-badge { background:rgba(255,69,0,.7); color:#fff; padding:3px 9px; border-radius:12px; font-size:11px; font-weight:700; white-space:nowrap; }
+
+    /* ── MEDIA TYPE FILTER ── */
+    #media-filter { display:flex; gap:3px; }
+    .mf-btn {
+      background:var(--bg); border:1px solid var(--border); color:var(--muted);
+      padding:5px 10px; border-radius:20px; font-size:12px; cursor:pointer;
+      white-space:nowrap; transition:all .15s; font-weight:600;
+    }
+    .mf-btn:hover { border-color:var(--text); color:var(--text); }
+    .mf-btn.active { background:rgba(255,69,0,.15); border-color:var(--accent); color:var(--accent); }
+
+    /* ── FAVORITES PANEL ── */
+    #fav-btn {
+      background:var(--bg); border:1px solid var(--border); color:var(--muted);
+      padding:5px 10px; border-radius:20px; font-size:12px; cursor:pointer;
+      white-space:nowrap; transition:all .2s; display:flex; align-items:center; gap:5px;
+    }
+    #fav-btn:hover { border-color:#f5c518; color:#f5c518; }
+    #fav-btn.has-favs { color:#f5c518; border-color:#f5c518; background:rgba(245,197,24,.08); }
+
+    #fav-panel {
+      display:none; position:fixed; top:48px; left:0; right:0;
+      background:var(--surface); border-bottom:1px solid var(--border);
+      padding:10px 14px; z-index:200; flex-wrap:wrap; gap:8px; align-items:center;
+      box-shadow:0 4px 20px rgba(0,0,0,.5);
+    }
+    #fav-panel.open { display:flex; }
+    #fav-panel .fav-label { font-size:11px; color:var(--muted); font-weight:600; text-transform:uppercase; letter-spacing:.5px; margin-right:4px; }
+    .fav-item {
+      display:inline-flex; align-items:center; gap:0;
+      background:var(--bg); border:1px solid var(--border); border-radius:20px;
+      overflow:hidden; transition:border-color .15s;
+    }
+    .fav-item:hover { border-color:var(--accent); }
+    .fav-load {
+      background:none; border:none; color:var(--text); padding:5px 10px 5px 12px;
+      font-size:12px; cursor:pointer; font-weight:600; white-space:nowrap;
+    }
+    .fav-load:hover { color:var(--accent); }
+    .fav-del {
+      background:none; border:none; color:var(--muted); padding:5px 8px 5px 4px;
+      font-size:12px; cursor:pointer; line-height:1;
+    }
+    .fav-del:hover { color:#ff6b6b; }
+    #save-fav-btn {
+      background:rgba(245,197,24,.12); border:1px solid rgba(245,197,24,.4); color:#f5c518;
+      padding:5px 12px; border-radius:20px; font-size:12px; cursor:pointer; font-weight:600; white-space:nowrap;
+    }
+    #save-fav-btn:hover { background:rgba(245,197,24,.25); }
+    #no-favs-msg { font-size:12px; color:var(--muted); font-style:italic; }
+
+    @media(max-width:600px) {
+      :root { --thumb:150px; }
+      .vmeta { display:none; }
+      #vbot span:not(:last-child) { display:none; }
+      .arrow { font-size:28px; padding:12px 8px; opacity:1 !important; }
+      #vtop { opacity:1 !important; pointer-events:all !important; }
+      #vbot { opacity:1 !important; pointer-events:all !important; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="topbar">
+  <div class="logo">📺 redditpx</div>
+
+  <div id="sub-area">
+    <!-- subreddit tags injected here -->
+  </div>
+  <input id="sub-input" placeholder="add subreddit…" />
+  <button id="add-sub-btn">+ Add</button>
+
+  <select id="sort-sel">
+    <option value="hot">🔥 Hot</option>
+    <option value="new">✨ New</option>
+    <option value="top">🏆 Top</option>
+    <option value="rising">📈 Rising</option>
+  </select>
+  <button id="go-btn">Load</button>
+
+  <div class="spacer"></div>
+
+  <div id="media-filter">
+    <button class="mf-btn active" data-filter="all">All</button>
+    <button class="mf-btn" data-filter="video">🎬 Video/GIF</button>
+    <button class="mf-btn" data-filter="image">🖼 Image</button>
+  </div>
+  <button id="fav-btn" title="Favorites">⭐ Favorites</button>
+  <button id="hide-seen-btn" title="Hide posts you've already viewed">👁 Hide seen</button>
+  <button id="clear-seen-btn" title="Clear seen history">↺</button>
+  <div id="status">–</div>
+</div>
+
+<!-- FAVORITES PANEL (below topbar) -->
+<div id="fav-panel">
+  <span class="fav-label">⭐ Saved</span>
+  <div id="fav-list"></div>
+  <button id="save-fav-btn">＋ Save current</button>
+  <span id="no-favs-msg" style="display:none">Belum ada favorit tersimpan</span>
+</div>
+
+<div id="grid-wrap">
+  <div id="grid"></div>
+  <button id="load-more">⬇ Load More</button>
+</div>
+
+<div id="loader"><div class="spin"></div><span>Loading…</span></div>
+
+<div id="viewer">
+  <div id="vstage">
+    <div id="media-wrap"></div>
+    <button class="arrow" id="prev">‹</button>
+    <button class="arrow" id="next">›</button>
+    <button id="zoom-btn" title="Toggle zoom">⤢</button>
+  </div>
+  <div id="vtop">
+    <button class="vbtn red" id="close-v">✕</button>
+    <span id="v-sub-badge"></span>
+    <div id="vtitle">–</div>
+    <div class="vmeta">
+      <span>⬆ <span id="v-score">–</span></span>
+      <span>💬 <span id="v-cmts">–</span></span>
+      <span>👤 <span id="v-author">–</span></span>
+    </div>
+    <a id="v-link" href="#" target="_blank" class="vbtn">↗ Reddit</a>
+  </div>
+  <div id="vbot">
+    <span><kbd>←</kbd> <kbd>→</kbd> Navigate</span>
+    <span><kbd>Space</kbd> Play/Pause</span>
+    <span><kbd>M</kbd> Mute</span>
+    <span><kbd>H</kbd> Hide seen on/off</span>
+    <span><kbd>Z</kbd> Zoom</span>
+    <span><kbd>Esc</kbd> Close</span>
+    <div id="vcounter">–</div>
+  </div>
+</div>
+
+<script>
+// ══ PROXIES ══
+const PROXIES = [
+  url => url,
+  url => 'https://corsproxy.io/?url=' + encodeURIComponent(url),
+  url => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url),
+];
+
+// ══ STATE ══
+let posts = [];
+let afterTokens = {}; // { subName: afterToken }
+let activeSubs = ['funny']; // list of subreddits
+let curSort = 'hot';
+let curIdx = 0;
+let busy = false;
+let videoZoom = true;
+let hlsInstance = null;
+let hideSeen = false;
+let mediaFilter = 'all'; // 'all' | 'video' | 'image'
+
+// ══ SEEN POSTS (localStorage) ══
+const SEEN_KEY = 'redditpx_seen';
+let seenIds = new Set();
+try { seenIds = new Set(JSON.parse(localStorage.getItem(SEEN_KEY) || '[]')); } catch(e) {}
+
+function markSeen(id) {
+  seenIds.add(id);
+  try {
+    // Keep max 2000 entries
+    const arr = [...seenIds];
+    if (arr.length > 2000) arr.splice(0, arr.length - 2000);
+    localStorage.setItem(SEEN_KEY, JSON.stringify(arr));
+  } catch(e) {}
+}
+
+function clearSeen() {
+  seenIds.clear();
+  try { localStorage.removeItem(SEEN_KEY); } catch(e) {}
+  document.querySelectorAll('.card').forEach(c => { c.classList.remove('seen'); updateCardVisibility(c); });
+  updateStatus();
+}
+
+function updateCardVisibility(card) {
+  const isSeen = hideSeen && card.classList.contains('seen');
+  const type = card.dataset.mtype; // 'image' or 'video'
+  const filteredOut = mediaFilter !== 'all' && type !== mediaFilter;
+  card.style.display = (isSeen || filteredOut) ? 'none' : '';
+}
+
+function setMediaFilter(f) {
+  mediaFilter = f;
+  document.querySelectorAll('.mf-btn').forEach(b => b.classList.toggle('active', b.dataset.filter === f));
+  document.querySelectorAll('.card').forEach(c => updateCardVisibility(c));
+  updateStatus();
+}
+
+// ══ FAVORITES (localStorage) ══
+const FAV_KEY = 'redditpx_favorites';
+let favorites = []; // array of { name, subs: [] }
+try { favorites = JSON.parse(localStorage.getItem(FAV_KEY) || '[]'); } catch(e) {}
+
+function saveFavorites() {
+  try { localStorage.setItem(FAV_KEY, JSON.stringify(favorites)); } catch(e) {}
+}
+
+function saveCurrentAsFavorite() {
+  if (activeSubs.length === 0) return;
+  const defaultName = activeSubs.join('+');
+  const name = prompt('Nama favorit ini:', defaultName);
+  if (!name) return;
+  // Remove duplicate name
+  favorites = favorites.filter(f => f.name !== name);
+  favorites.push({ name: name.trim(), subs: [...activeSubs] });
+  saveFavorites();
+  renderFavPanel();
+  updateFavBtn();
+}
+
+function loadFavorite(fav) {
+  activeSubs = [...fav.subs];
+  renderSubTags();
+  closeFavPanel();
+  fetchAllSubs(false);
+}
+
+function deleteFavorite(name) {
+  favorites = favorites.filter(f => f.name !== name);
+  saveFavorites();
+  renderFavPanel();
+  updateFavBtn();
+}
+
+function renderFavPanel() {
+  const list = $('fav-list');
+  const noMsg = $('no-favs-msg');
+  list.innerHTML = '';
+  if (favorites.length === 0) {
+    noMsg.style.display = '';
+  } else {
+    noMsg.style.display = 'none';
+    favorites.forEach(fav => {
+      const item = document.createElement('div');
+      item.className = 'fav-item';
+      const loadBtn = document.createElement('button');
+      loadBtn.className = 'fav-load';
+      loadBtn.textContent = fav.name;
+      loadBtn.title = fav.subs.map(s => 'r/'+s).join(' + ');
+      loadBtn.addEventListener('click', () => loadFavorite(fav));
+      const delBtn = document.createElement('button');
+      delBtn.className = 'fav-del';
+      delBtn.textContent = '✕';
+      delBtn.title = 'Hapus';
+      delBtn.addEventListener('click', (e) => { e.stopPropagation(); deleteFavorite(fav.name); });
+      item.appendChild(loadBtn);
+      item.appendChild(delBtn);
+      list.appendChild(item);
+    });
+  }
+}
+
+function toggleFavPanel() {
+  const panel = $('fav-panel');
+  panel.classList.toggle('open');
+  if (panel.classList.contains('open')) renderFavPanel();
+}
+
+function closeFavPanel() {
+  $('fav-panel').classList.remove('open');
+}
+
+function updateFavBtn() {
+  $('fav-btn').classList.toggle('has-favs', favorites.length > 0);
+}
+
+// ══ DOM ══
+const $ = id => document.getElementById(id);
+const grid = $('grid'), loader = $('loader'), viewer = $('viewer'), mWrap = $('media-wrap');
+
+function fmt(n) {
+  n = n || 0;
+  return n >= 1000 ? (n / 1000).toFixed(1) + 'k' : String(n);
+}
+
+// ══ SUB TAGS UI ══
+function renderSubTags() {
+  const area = $('sub-area');
+  area.innerHTML = '';
+  activeSubs.forEach(sub => {
+    const tag = document.createElement('div');
+    tag.className = 'sub-tag';
+    tag.innerHTML = `r/${sub} <button class="rm" data-sub="${sub}">✕</button>`;
+    tag.querySelector('.rm').addEventListener('click', () => removeSub(sub));
+    area.appendChild(tag);
+  });
+  // Show multi-mode label on cards
+  if (activeSubs.length > 1) grid.classList.add('multi-mode');
+  else grid.classList.remove('multi-mode');
+}
+
+function addSub(sub) {
+  sub = sub.trim().replace(/^r\//, '').toLowerCase();
+  if (!sub || activeSubs.includes(sub)) return;
+  activeSubs.push(sub);
+  renderSubTags();
+}
+
+function removeSub(sub) {
+  activeSubs = activeSubs.filter(s => s !== sub);
+  if (activeSubs.length === 0) activeSubs = ['funny'];
+  renderSubTags();
+}
+
+// ══ REDGIFS ══
+function getRedgifsId(url) {
+  const match = url.match(/redgifs\.com\/(?:watch\/|ifr\/|i\/)?([a-zA-Z0-9]+)/i);
+  return match ? match[1].toLowerCase() : null;
+}
+
+// ══ MEDIA EXTRACTION ══
+function getMedia(d) {
+  const url = (d.url || '').replace(/&amp;/g, '&');
+  const hint = d.post_hint || '';
+  const dec = s => (s || '').replace(/&amp;/g, '&');
+
+  if (/redgifs\.com/i.test(url)) {
+    return { type:'video', url, fallbacks:[], hls:null, isRedgifs:true, redgifsUrl:url, thumb:dec(d.thumbnail) };
+  }
+  if (d.is_video && d.media?.reddit_video) {
+    const rv = d.media.reddit_video;
+    const fallback = dec(rv.fallback_url || '');
+    const hls = dec(rv.hls_url || '');
+    const fallbacks = fallback ? [fallback,
+      fallback.replace(/DASH_\d+/, 'DASH_720'),
+      fallback.replace(/DASH_\d+/, 'DASH_480'),
+      fallback.replace(/DASH_\d+/, 'DASH_360'),
+      fallback.replace(/DASH_\d+/, 'DASH_240'),
+    ] : [];
+    return { type:'video', url:fallback||hls, hls, fallbacks:[...new Set(fallbacks)].filter(Boolean), thumb:d.thumbnail, isReddit:true };
+  }
+  if (/\.gif(v)?(\?|$)/i.test(url)) {
+    const mp4 = dec(d.preview?.images?.[0]?.variants?.mp4?.source?.url || '');
+    if (mp4) return { type:'video', url:mp4, fallbacks:[mp4], thumb:dec(d.thumbnail) };
+    if (/\.gifv$/i.test(url)) { const m=url.replace(/\.gifv$/i,'.mp4'); return { type:'video', url:m, fallbacks:[m], thumb:dec(d.thumbnail) }; }
+    return { type:'image', url, thumb:dec(d.thumbnail) };
+  }
+  if (/\.mp4(\?|$)/i.test(url)) return { type:'video', url, fallbacks:[url], thumb:dec(d.thumbnail) };
+  if (hint === 'image' || /\.(jpg|jpeg|png|webp)(\?|$)/i.test(url)) {
+    const prev = dec(d.preview?.images?.[0]?.source?.url || '');
+    return { type:'image', url:prev||url, thumb:prev||dec(d.thumbnail)||url };
+  }
+  if (/imgur\.com\//.test(url) && !/\.(jpg|png|gif|mp4|gifv)$/i.test(url)) {
+    return { type:'image', url:url.replace('imgur.com/','i.imgur.com/')+'.jpg', thumb:dec(d.thumbnail) };
+  }
+  if (d.preview?.images?.[0]) {
+    const vidV = dec(d.preview.images[0].variants?.mp4?.source?.url || '');
+    if (vidV) return { type:'video', url:vidV, fallbacks:[vidV], thumb:dec(d.thumbnail) };
+    const src = dec(d.preview.images[0].source.url);
+    return { type:'image', url:src, thumb:src };
+  }
+  return null;
+}
+
+// ══ FETCH — single sub ══
+async function fetchOneSub(sub, sort, aft) {
+  const base = `https://www.reddit.com/r/${sub}/${sort}.json?limit=25&raw_json=1${aft ? '&after='+aft : ''}`;
+  for (const makeUrl of PROXIES) {
+    try {
+      const r = await fetch(makeUrl(base), { headers: { 'User-Agent':'redditpx-clone/1.0' } });
+      if (!r.ok) continue;
+      const data = await r.json();
+      if (data?.data) return data.data;
+    } catch(e) {}
+  }
+  return null;
+}
+
+// ══ FETCH ALL SUBS (parallel) ══
+async function fetchAllSubs(isLoadMore = false) {
+  if (busy) return;
+  busy = true;
+  loader.classList.add('on');
+
+  if (!isLoadMore) {
+    posts = [];
+    afterTokens = {};
+    grid.innerHTML = '';
+  }
+
+  // Fetch all subs in parallel
+  const results = await Promise.all(activeSubs.map(sub => fetchOneSub(sub, curSort, isLoadMore ? afterTokens[sub] : null)));
+
+  loader.classList.remove('on');
+  busy = false;
+
+  let anyFailed = false;
+  let fresh = [];
+
+  results.forEach((data, i) => {
+    const sub = activeSubs[i];
+    if (!data) { anyFailed = true; return; }
+    afterTokens[sub] = data.after || null;
+    const children = data.children || [];
+    const subPosts = children.map(c => {
+      const m = getMedia(c.data);
+      return m ? { d: c.data, m, sub } : null;
+    }).filter(Boolean);
+    fresh.push(...subPosts);
+  });
+
+  if (anyFailed && fresh.length === 0) {
+    alert('Could not load subreddits. May be private or NSFW-gated.\nTry: python -m http.server');
+    return;
+  }
+
+  // Shuffle if multi-sub so they interleave nicely
+  if (activeSubs.length > 1) fresh = shuffleInterleave(fresh);
+
+  posts = isLoadMore ? [...posts, ...fresh] : fresh;
+
+  renderCards(fresh);
+  updateStatus();
+
+  // Show load more if any sub still has pages
+  const hasMore = activeSubs.some(s => afterTokens[s]);
+  $('load-more').style.display = hasMore ? 'block' : 'none';
+}
+
+// Interleave posts from different subs
+function shuffleInterleave(items) {
+  // Group by sub, then round-robin
+  const groups = {};
+  items.forEach(p => { (groups[p.sub] = groups[p.sub]||[]).push(p); });
+  const keys = Object.keys(groups);
+  const result = [];
+  let i = 0;
+  while (keys.some(k => i < groups[k].length)) {
+    keys.forEach(k => { if (i < groups[k].length) result.push(groups[k][i]); });
+    i++;
+  }
+  return result;
+}
+
+function updateStatus() {
+  const seenCount = posts.filter(p => seenIds.has(p.d.id)).length;
+  const videoCount = posts.filter(p => p.m.type === 'video').length;
+  const imageCount = posts.filter(p => p.m.type === 'image').length;
+  const subStr = activeSubs.length > 1 ? activeSubs.map(s=>'r/'+s).join(' + ') : 'r/'+activeSubs[0];
+  const filterStr = mediaFilter === 'all' ? `${videoCount}v ${imageCount}i` : mediaFilter === 'video' ? `${videoCount} video/gif` : `${imageCount} image`;
+  $('status').textContent = `${subStr} · ${filterStr} · ${seenCount} seen`;
+}
+
+// ══ RENDER GRID ══
+function renderCards(items) {
+  if (activeSubs.length > 1) grid.classList.add('multi-mode');
+  else grid.classList.remove('multi-mode');
+
+  items.forEach(p => {
+    const idx = posts.indexOf(p);
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.dataset.i = idx;
+    card.dataset.id = p.d.id;
+    card.dataset.mtype = p.m.type; // 'image' or 'video'
+
+    if (seenIds.has(p.d.id)) card.classList.add('seen');
+
+    if (p.m.type === 'image') {
+      const img = document.createElement('img');
+      img.src = p.m.thumb || p.m.url;
+      img.loading = 'lazy'; img.alt = p.d.title;
+      img.onerror = () => img.style.display = 'none';
+      card.appendChild(img);
+    } else {
+      const thumb = p.m.thumb;
+      if (thumb && !['default','self','nsfw',''].some(x => thumb.includes(x))) {
+        const img = document.createElement('img');
+        img.src = thumb; img.loading = 'lazy'; img.alt = p.d.title;
+        img.onerror = () => img.style.display = 'none';
+        card.appendChild(img);
+      } else {
+        const ph = document.createElement('div');
+        ph.style.cssText = 'width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:32px;background:#111;';
+        ph.textContent = p.d.is_video ? '🎬' : '🎞️';
+        card.appendChild(ph);
+      }
+      const b = document.createElement('div');
+      b.className = 'badge';
+      b.textContent = p.d.is_video ? '▶ VIDEO' : '🔄 GIF';
+      card.appendChild(b);
+    }
+
+    // Sub label (visible in multi-mode)
+    const sl = document.createElement('div');
+    sl.className = 'sub-label';
+    sl.textContent = p.sub;
+    card.appendChild(sl);
+
+    const s = document.createElement('div');
+    s.className = 'score';
+    s.textContent = '⬆ ' + fmt(p.d.score);
+    card.appendChild(s);
+
+    // Seen dot
+    if (seenIds.has(p.d.id)) {
+      const dot = document.createElement('div');
+      dot.className = 'seen-dot badge';
+      dot.style.right = 'auto'; dot.style.left = '5px'; dot.style.top = '5px';
+      dot.textContent = '✓';
+      card.appendChild(dot);
+    }
+
+    updateCardVisibility(card);
+    card.addEventListener('click', () => openViewer(idx));
+    grid.appendChild(card);
+  });
+}
+
+// ══ VIEWER ══
+function openViewer(idx) {
+  curIdx = idx;
+  viewer.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  showMedia();
+}
+
+function closeViewer() {
+  viewer.classList.remove('open');
+  document.body.style.overflow = '';
+  clearMedia();
+}
+
+function clearMedia() {
+  if (hlsInstance) { hlsInstance.destroy(); hlsInstance = null; }
+  const v = mWrap.querySelector('video');
+  if (v) { v.pause(); v.src = ''; v.load(); }
+  mWrap.innerHTML = ''; mWrap.className = '';
+}
+
+function go(dir) {
+  // If hideSeen, skip seen posts
+  let n = curIdx + dir;
+  while (n >= 0 && n < posts.length) {
+    if (!hideSeen || !seenIds.has(posts[n].d.id)) break;
+    n += dir;
+  }
+  if (n < 0 || n >= posts.length) return;
+  curIdx = n;
+  showMedia();
+  if (curIdx >= posts.length - 4 && activeSubs.some(s => afterTokens[s]) && !busy) fetchAllSubs(true);
+}
+
+async function tryVideoFallbacks(vid, fallbacks, hlsUrl) {
+  if (hlsUrl && typeof Hls !== 'undefined' && Hls.isSupported()) {
+    return new Promise(resolve => {
+      if (hlsInstance) { hlsInstance.destroy(); hlsInstance = null; }
+      const hls = new Hls({ enableWorker:false, lowLatencyMode:false });
+      hlsInstance = hls;
+      hls.loadSource(hlsUrl); hls.attachMedia(vid);
+      hls.on(Hls.Events.MANIFEST_PARSED, () => { vid.play().catch(()=>{}); resolve(true); });
+      hls.on(Hls.Events.ERROR, (e, data) => { if (data.fatal) { hls.destroy(); hlsInstance=null; resolve(false); } });
+      setTimeout(() => { if (hlsInstance===hls) { hls.destroy(); hlsInstance=null; resolve(false); } }, 5000);
+    });
+  }
+  if (hlsUrl && vid.canPlayType('application/vnd.apple.mpegurl')) {
+    vid.src = hlsUrl;
+    try { await vid.play(); return true; } catch(e) {}
+  }
+  for (const url of (fallbacks || [])) {
+    vid.src = url; vid.load();
+    try {
+      await new Promise((res, rej) => {
+        const ok = () => { vid.removeEventListener('canplay',ok); vid.removeEventListener('error',fail); res(); };
+        const fail = () => { vid.removeEventListener('canplay',ok); vid.removeEventListener('error',fail); rej(); };
+        vid.addEventListener('canplay', ok, {once:true});
+        vid.addEventListener('error', fail, {once:true});
+        setTimeout(rej, 4000);
+      });
+      vid.play().catch(() => { vid.muted=true; vid.play().catch(()=>{}); });
+      return true;
+    } catch(e) { continue; }
+  }
+  return false;
+}
+
+function showError(d) {
+  mWrap.innerHTML = '';
+  const err = document.createElement('div');
+  err.className = 'media-error';
+  err.innerHTML = `<div class="err-icon">😕</div>
+    <div style="font-size:14px;color:#ccc">Video tidak bisa dimuat</div>
+    <div style="font-size:12px;color:#666;max-width:300px">${d.title}</div>
+    <a href="https://reddit.com${d.permalink}" target="_blank">🔗 Buka di Reddit</a>`;
+  mWrap.appendChild(err);
+}
+
+async function showMedia() {
+  clearMedia();
+  const p = posts[curIdx];
+  if (!p) return;
+  const { d, m, sub } = p;
+
+  // Mark as seen
+  markSeen(d.id);
+  // Update card in grid
+  const card = document.querySelector(`.card[data-id="${d.id}"]`);
+  if (card) {
+    card.classList.add('seen');
+    updateCardVisibility(card);
+    // Add seen dot if not there
+    if (!card.querySelector('.seen-dot')) {
+      const dot = document.createElement('div');
+      dot.className = 'seen-dot badge';
+      dot.style.right = 'auto'; dot.style.left = '5px'; dot.style.top = '5px';
+      dot.textContent = '✓';
+      card.appendChild(dot);
+    }
+  }
+
+  $('vtitle').textContent = d.title;
+  $('v-score').textContent = fmt(d.score);
+  $('v-cmts').textContent = fmt(d.num_comments);
+  $('v-author').textContent = 'u/' + d.author;
+  $('v-link').href = 'https://reddit.com' + d.permalink;
+  $('vcounter').textContent = `${curIdx + 1} / ${posts.length}`;
+  $('v-sub-badge').textContent = 'r/' + sub;
+  $('v-sub-badge').style.display = activeSubs.length > 1 ? '' : 'none';
+
+  document.querySelectorAll('.card').forEach(c => c.classList.remove('active-card'));
+  const ac = document.querySelector(`.card[data-i="${curIdx}"]`);
+  if (ac) { ac.classList.add('active-card'); ac.scrollIntoView({block:'nearest',behavior:'smooth'}); }
+
+  updateStatus();
+
+  if (m.type === 'image') {
+    mWrap.className = 'is-image';
+    const img = document.createElement('img');
+    img.src = m.url; img.alt = d.title;
+    mWrap.appendChild(img);
+  } else {
+    mWrap.className = 'is-video';
+    if (m.isRedgifs) {
+      const rgId = getRedgifsId(m.redgifsUrl);
+      if (!rgId) { showError(d); return; }
+      const iframe = document.createElement('iframe');
+      iframe.src = `https://www.redgifs.com/ifr/${rgId}`;
+      iframe.allow = 'autoplay; fullscreen';
+      iframe.allowFullscreen = true; iframe.scrolling = 'no';
+      mWrap.appendChild(iframe);
+      return;
+    }
+    const vid = document.createElement('video');
+    vid.controls = true; vid.autoplay = true; vid.loop = true;
+    vid.muted = false; vid.playsInline = true;
+    vid.style.objectFit = videoZoom ? 'cover' : 'contain';
+    vid.style.background = '#111';
+    if (m.thumb) vid.poster = m.thumb;
+    mWrap.appendChild(vid);
+    const ok = await tryVideoFallbacks(vid, m.fallbacks, m.hls);
+    if (!ok) showError(d);
+  }
+
+  const np = posts[curIdx + 1];
+  if (np?.m.type === 'image') { new Image().src = np.m.url; }
+}
+
+function toggleZoom() {
+  videoZoom = !videoZoom;
+  const vid = mWrap.querySelector('video');
+  if (vid) vid.style.objectFit = videoZoom ? 'cover' : 'contain';
+  $('zoom-btn').textContent = videoZoom ? '⤢' : '⤡';
+}
+
+function toggleHideSeen() {
+  hideSeen = !hideSeen;
+  const btn = $('hide-seen-btn');
+  btn.classList.toggle('active', hideSeen);
+  btn.innerHTML = hideSeen ? '👁 Showing unread' : '👁 Hide seen';
+  document.querySelectorAll('.card').forEach(c => updateCardVisibility(c));
+}
+
+// ══ EVENTS ══
+$('add-sub-btn').addEventListener('click', () => {
+  const v = $('sub-input').value;
+  if (v.trim()) { addSub(v); $('sub-input').value = ''; }
+});
+$('sub-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') { const v = $('sub-input').value; if(v.trim()){ addSub(v); $('sub-input').value=''; } }
+});
+document.querySelectorAll('.mf-btn').forEach(btn => {
+  btn.addEventListener('click', () => setMediaFilter(btn.dataset.filter));
+});
+$('fav-btn').addEventListener('click', toggleFavPanel);
+$('save-fav-btn').addEventListener('click', saveCurrentAsFavorite);
+// Close fav panel when clicking outside
+document.addEventListener('click', e => {
+  if (!$('fav-panel').contains(e.target) && e.target !== $('fav-btn')) closeFavPanel();
+});
+$('go-btn').addEventListener('click', () => fetchAllSubs(false));
+$('load-more').addEventListener('click', () => fetchAllSubs(true));
+$('hide-seen-btn').addEventListener('click', toggleHideSeen);
+$('clear-seen-btn').addEventListener('click', () => { if(confirm('Hapus semua riwayat post yang sudah dilihat?')) clearSeen(); });
+$('close-v').addEventListener('click', closeViewer);
+$('prev').addEventListener('click', () => go(-1));
+$('next').addEventListener('click', () => go(1));
+$('zoom-btn').addEventListener('click', toggleZoom);
+$('vstage').addEventListener('click', e => { if (e.target === $('vstage')) closeViewer(); });
+
+let uiTimer;
+viewer.addEventListener('touchstart', () => {
+  viewer.classList.add('show-ui');
+  clearTimeout(uiTimer);
+  uiTimer = setTimeout(() => viewer.classList.remove('show-ui'), 3000);
+}, { passive:true });
+
+document.addEventListener('keydown', e => {
+  if (!viewer.classList.contains('open')) {
+    if (e.key === 'Enter') $('go-btn').click();
+    return;
+  }
+  const vid = mWrap.querySelector('video');
+  switch (e.key) {
+    case 'Escape': closeViewer(); break;
+    case 'ArrowRight': case 'd': case 'j': go(1); break;
+    case 'ArrowLeft': case 'a': case 'k': go(-1); break;
+    case ' ': e.preventDefault(); if(vid) vid.paused?vid.play():vid.pause(); else go(1); break;
+    case 'm': case 'M': if(vid) vid.muted=!vid.muted; break;
+    case 'z': case 'Z': toggleZoom(); break;
+    case 'h': case 'H': toggleHideSeen(); break;
+  }
+});
+
+let tx=0, ty=0;
+viewer.addEventListener('touchstart', e=>{ tx=e.touches[0].clientX; ty=e.touches[0].clientY; }, {passive:true});
+viewer.addEventListener('touchend', e=>{
+  const dx=e.changedTouches[0].clientX-tx, dy=e.changedTouches[0].clientY-ty;
+  if(Math.abs(dx)>Math.abs(dy)&&Math.abs(dx)>60) go(dx<0?1:-1);
+}, {passive:true});
+
+// ══ INIT ══
+renderSubTags();
+updateFavBtn();
+fetchAllSubs(false);
+</script>
+</body>
+</html>
