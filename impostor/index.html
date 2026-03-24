@@ -3,297 +3,620 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Game Impostor - 4 Pemain</title>
+    <title>Game Impostorku</title>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        :root {
+            --bg: #0d0d12;
+            --surface: #16161f;
+            --surface2: #1e1e2a;
+            --accent: #c8ff4a;
+            --accent2: #ff4a8a;
+            --accent3: #4affdd;
+            --text: #f0f0f0;
+            --muted: #666;
+            --radius: 16px;
         }
 
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
         body {
-            font-family: 'Arial', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
             padding: 20px;
+            color: var(--text);
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(ellipse at 20% 50%, rgba(200,255,74,0.05) 0%, transparent 60%),
+                        radial-gradient(ellipse at 80% 20%, rgba(255,74,138,0.05) 0%, transparent 50%);
+            pointer-events: none;
         }
 
         .container {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-            padding: 40px;
-            text-align: center;
-            max-width: 500px;
             width: 100%;
-            backdrop-filter: blur(10px);
+            max-width: 480px;
+            position: relative;
         }
 
-        h1 {
-            color: #333;
-            margin-bottom: 10px;
-            font-size: 2.5em;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        /* SCREENS */
+        .screen { display: none; }
+        .screen.active { display: block; }
+
+        /* SETUP SCREEN */
+        .logo {
+            font-family: 'Syne', sans-serif;
+            font-size: 2.8em;
+            font-weight: 800;
+            letter-spacing: -1px;
+            line-height: 1;
+            margin-bottom: 6px;
+        }
+        .logo span { color: var(--accent); }
+
+        .tagline {
+            color: var(--muted);
+            font-size: 0.95em;
+            margin-bottom: 36px;
         }
 
-        .subtitle {
-            color: #666;
-            margin-bottom: 30px;
+        .section-label {
+            font-family: 'Syne', sans-serif;
+            font-size: 0.75em;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 14px;
+        }
+
+        /* PLAYER COUNT PICKER */
+        .player-picker {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 8px;
+            margin-bottom: 28px;
+        }
+
+        .count-btn {
+            background: var(--surface);
+            border: 1.5px solid #2a2a38;
+            color: var(--muted);
+            font-family: 'Syne', sans-serif;
             font-size: 1.1em;
-        }
-
-        .game-setup {
-            display: block;
-        }
-
-        .game-setup.hidden {
-            display: none;
-        }
-
-        .player-reveal {
-            display: none;
-        }
-
-        .player-reveal.active {
-            display: block;
-        }
-
-        .start-btn {
-            background: linear-gradient(45deg, #4CAF50, #45a049);
-            color: white;
-            border: none;
-            padding: 15px 30px;
-            font-size: 1.2em;
-            border-radius: 50px;
+            font-weight: 700;
+            padding: 14px 0;
+            border-radius: 12px;
             cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+            transition: all 0.18s;
+        }
+
+        .count-btn:hover {
+            border-color: var(--accent);
+            color: var(--text);
+        }
+
+        .count-btn.selected {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #0d0d12;
+        }
+
+        /* IMPOSTOR COUNT PICKER */
+        .impostor-picker {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 36px;
+        }
+
+        .imp-btn {
+            background: var(--surface);
+            border: 1.5px solid #2a2a38;
+            color: var(--muted);
+            font-family: 'Syne', sans-serif;
+            font-size: 1em;
+            font-weight: 700;
+            padding: 12px 0;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.18s;
+        }
+
+        .imp-btn:hover {
+            border-color: var(--accent2);
+            color: var(--text);
+        }
+
+        .imp-btn.selected {
+            background: var(--accent2);
+            border-color: var(--accent2);
+            color: #fff;
+        }
+
+        .imp-btn:disabled {
+            opacity: 0.25;
+            pointer-events: none;
+        }
+
+        /* INSTRUCTIONS */
+        .instructions {
+            background: var(--surface);
+            border: 1px solid #2a2a38;
+            border-radius: var(--radius);
+            padding: 18px 20px;
+            margin-bottom: 28px;
+            font-size: 0.88em;
+            color: #999;
+            line-height: 1.7;
+        }
+
+        .instructions strong {
+            color: var(--accent);
+            font-family: 'Syne', sans-serif;
+        }
+
+        /* START BUTTON */
+        .start-btn {
+            width: 100%;
+            background: var(--accent);
+            color: #0d0d12;
+            border: none;
+            padding: 18px;
+            font-family: 'Syne', sans-serif;
+            font-size: 1.15em;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: all 0.2s;
         }
 
         .start-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+            box-shadow: 0 8px 24px rgba(200,255,74,0.25);
         }
 
-        .player-card {
-            background: linear-gradient(45deg, #FF6B6B, #4ECDC4);
-            color: white;
-            padding: 30px;
-            border-radius: 15px;
-            margin: 20px 0;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        /* REVEAL SCREEN */
+        .player-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 28px;
         }
 
-        .player-name {
-            font-size: 1.5em;
-            font-weight: bold;
-            margin-bottom: 15px;
+        .player-badge {
+            font-family: 'Syne', sans-serif;
+            font-size: 0.85em;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: var(--muted);
         }
 
-        .keyword {
-            font-size: 2em;
-            font-weight: bold;
-            background: rgba(255, 255, 255, 0.2);
-            padding: 15px;
-            border-radius: 10px;
-            margin: 15px 0;
-            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+        .progress-dots {
+            display: flex;
+            gap: 6px;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--surface2);
+            transition: background 0.3s;
+        }
+
+        .dot.done { background: var(--accent); }
+        .dot.active { background: var(--accent3); }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid #2a2a38;
+            border-radius: 20px;
+            padding: 36px 28px;
+            text-align: center;
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: -60px; right: -60px;
+            width: 160px; height: 160px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(200,255,74,0.06) 0%, transparent 70%);
+        }
+
+        .player-num {
+            font-family: 'Syne', sans-serif;
+            font-size: 0.8em;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 8px;
+        }
+
+        .player-title {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.8em;
+            font-weight: 800;
+            margin-bottom: 28px;
+        }
+
+        .keyword-wrap {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .keyword-box {
+            background: var(--surface2);
+            border: 1.5px solid #2a2a38;
+            border-radius: 14px;
+            padding: 22px;
+            font-family: 'Syne', sans-serif;
+            font-size: 1.9em;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            transition: all 0.3s;
+            cursor: pointer;
+            user-select: none;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .keyword-box.locked {
+            color: transparent;
+            border-style: dashed;
+            border-color: #3a3a4a;
+        }
+
+        .lock-overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            pointer-events: none;
+        }
+
+        .lock-overlay .lock-icon {
+            font-size: 1.6em;
+        }
+
+        .lock-overlay .lock-text {
+            font-size: 0.7em;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+
+        .lock-overlay.hidden { display: none; }
+
+        .keyword-box.revealed {
+            border-color: var(--accent3);
+            color: var(--text);
+            cursor: default;
+        }
+
+        .keyword-hint {
+            font-size: 0.82em;
+            color: var(--muted);
+        }
+
+        .action-row {
+            display: flex;
+            gap: 10px;
         }
 
         .next-btn, .restart-btn {
-            background: linear-gradient(45deg, #2196F3, #21CBF3);
-            color: white;
-            border: none;
-            padding: 12px 25px;
-            font-size: 1.1em;
-            border-radius: 25px;
+            flex: 1;
+            background: var(--surface2);
+            border: 1.5px solid #2a2a38;
+            color: var(--text);
+            font-family: 'Syne', sans-serif;
+            font-size: 1em;
+            font-weight: 700;
+            padding: 15px;
+            border-radius: var(--radius);
             cursor: pointer;
-            margin: 10px;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(33, 150, 243, 0.3);
+            transition: all 0.2s;
         }
 
-        .next-btn:hover, .restart-btn:hover {
+        .next-btn {
+            background: var(--accent3);
+            border-color: var(--accent3);
+            color: #0d0d12;
+        }
+
+        .next-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(33, 150, 243, 0.4);
+            box-shadow: 0 6px 20px rgba(74,255,221,0.2);
         }
 
-        .keyword-hidden {
-            background: rgba(0, 0, 0, 0.8);
-            color: transparent;
-            user-select: none;
-            cursor: pointer;
-            position: relative;
+        .restart-btn:hover {
+            border-color: var(--accent2);
+            color: var(--accent2);
         }
 
-        .keyword-hidden:before {
-            content: "🔒 KLIK UNTUK MELIHAT";
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: white;
-            font-size: 0.6em;
-            font-weight: normal;
-        }
-
-        .instructions {
-            background: rgba(255, 235, 59, 0.2);
-            padding: 20px;
-            border-radius: 10px;
-            margin: 20px 0;
-            border-left: 4px solid #FFC107;
-        }
-
-        .instructions h3 {
-            color: #F57F17;
-            margin-bottom: 10px;
-        }
-
-        .instructions p {
-            color: #333;
-            line-height: 1.6;
-        }
-
-        @keyframes bounce {
-            0%, 20%, 50%, 80%, 100% {
-                transform: translateY(0);
-            }
-            40% {
-                transform: translateY(-10px);
-            }
-            60% {
-                transform: translateY(-5px);
-            }
-        }
-
-        .bounce {
-            animation: bounce 2s infinite;
+        /* LAST PLAYER - Go time! */
+        .go-banner {
+            background: linear-gradient(135deg, var(--accent2), #ff8a4a);
+            border-radius: var(--radius);
+            padding: 14px;
+            text-align: center;
+            font-family: 'Syne', sans-serif;
+            font-weight: 800;
+            font-size: 1em;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+            display: none;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>🕵️ Game Impostorku</h1>
-        <p class="subtitle">Permainan Tebak Impostor untuk 4 Orang</p>
-        
-        <div id="gameSetup" class="game-setup">
-            <div class="instructions">
-                <h3>📋 Cara Bermain:</h3>
-                <p>• 4 pemain akan mendapat keyword secara bergiliran<br>
-                • 3 pemain mendapat keyword yang sama<br>
-                • 1 pemain (impostor) mendapat keyword berbeda<br>
-                • Diskusikan dan tebak siapa impostornya!</p>
-            </div>
-            <button class="start-btn bounce" onclick="startGame()">
-                🎲 Mulai Permainan
-            </button>
+<div class="container">
+
+    <!-- SETUP SCREEN -->
+    <div id="screenSetup" class="screen active">
+        <div class="logo">🕵️ Impostor<span>ku</span></div>
+        <p class="tagline">Tebak siapa yang berbeda di antara kalian</p>
+
+        <div class="section-label">Jumlah Pemain</div>
+        <div class="player-picker" id="playerPicker">
+            <button class="count-btn" data-val="3" onclick="selectPlayers(3)">3</button>
+            <button class="count-btn selected" data-val="4" onclick="selectPlayers(4)">4</button>
+            <button class="count-btn" data-val="5" onclick="selectPlayers(5)">5</button>
+            <button class="count-btn" data-val="6" onclick="selectPlayers(6)">6</button>
+            <button class="count-btn" data-val="7" onclick="selectPlayers(7)">7</button>
+            <button class="count-btn" data-val="8" onclick="selectPlayers(8)">8</button>
         </div>
 
-        <div id="playerReveal" class="player-reveal">
-            <div class="player-card">
-                <div class="player-name" id="currentPlayer">Pemain 1</div>
-                <div class="keyword keyword-hidden" id="playerKeyword" onclick="revealKeyword()">
-                    KEYWORD
+        <div class="section-label">Jumlah Impostor</div>
+        <div class="impostor-picker" id="impostorPicker">
+            <button class="imp-btn selected" data-val="1" onclick="selectImpostors(1)">1 Impostor</button>
+            <button class="imp-btn" data-val="2" onclick="selectImpostors(2)">2 Impostor</button>
+            <button class="imp-btn" data-val="3" onclick="selectImpostors(3)">3 Impostor</button>
+        </div>
+
+        <div class="instructions">
+            <strong>Cara Bermain</strong><br>
+            Setiap pemain buka keyword secara bergiliran — jangan sampai ketahuan! <span id="rulesText">3 pemain dapat keyword sama, 1 impostor dapat keyword berbeda.</span> Diskusikan dan tebak siapa impostornya!
+        </div>
+
+        <button class="start-btn" onclick="startGame()">Mulai Permainan →</button>
+    </div>
+
+    <!-- REVEAL SCREEN -->
+    <div id="screenReveal" class="screen">
+        <div class="player-header">
+            <div class="player-badge" id="revealBadge">Giliran Pemain</div>
+            <div class="progress-dots" id="progressDots"></div>
+        </div>
+
+        <div class="card">
+            <div class="player-num" id="playerNum">PEMAIN 1</div>
+            <div class="player-title" id="playerTitle">Giliran kamu!</div>
+            <div class="keyword-wrap" onclick="revealKeyword()">
+                <div class="keyword-box locked" id="keywordBox">KEYWORD</div>
+                <div class="lock-overlay" id="lockOverlay">
+                    <span class="lock-icon">🔒</span>
+                    <span class="lock-text">Tap untuk melihat</span>
                 </div>
-                <p style="margin: 15px 0; color: #666;">Klik keyword untuk melihat</p>
             </div>
-            <button class="next-btn" id="nextBtn" onclick="nextPlayer()" style="display: none;">
-                ➡️ Pemain Selanjutnya
-            </button>
-            <button class="restart-btn" id="restartBtn" onclick="restartGame()" style="display: none;">
-                🔄 Main Lagi
-            </button>
+            <div class="keyword-hint" id="keywordHint">Pastikan pemain lain tidak melihat layarmu</div>
+        </div>
+
+        <div class="go-banner" id="goBanner">🎉 Semua sudah lihat keyword — mulai diskusi!</div>
+
+        <div class="action-row">
+            <button class="restart-btn" onclick="restartGame()">↩ Ulang</button>
+            <button class="next-btn" id="nextBtn" onclick="nextPlayer()" style="display:none">Pemain Selanjutnya →</button>
+            <button class="next-btn" id="doneBtn" onclick="restartGame()" style="display:none">Main Lagi 🔄</button>
         </div>
     </div>
 
-    <script>
-        const keywords = [
-            // Kategori Hewan
-            ['Sapi', 'Kambing'], ['Lebah', 'Semut'], ['Elang', 'Burung Hantu'], ['Kuda', 'Zebra'], ['Kucing', 'Kelinci'], ['Kura-kura', 'Siput'], ['Buaya', 'Komodo'], ['Pizza', 'Burger'], ['Kopi', 'Teh'], ['Jeruk', 'Lemon'], ['Es Krim', 'Gelato'], ['Bakso', 'Mie Ayam'], ['Sate', 'Steak'], ['Cokelat', 'Permen'], ['Susu', 'Yogurt'], ['Roti', 'Biskuit'], ['Donat', 'Martabak'], ['Sekolah', 'Kampus'], ['Mall', 'Pasar'], ['Bandara', 'Stasiun'], ['Rumah Sakit', 'Puskesmas'], ['Bioskop', 'Teater'], ['Pantai', 'Kolam Renang'], ['Hutan', 'Taman'], ['Gunung', 'Bukit'], ['Masjid', 'Gereja'], ['Perpustakaan', 'Toko Buku'], ['Laptop', 'Komputer'], ['HP', 'Tablet'], ['Sepatu', 'Sandal'], ['Kacamata', 'Lensa Kontak'], ['Payung', 'Jas Hujan'], ['Jam Tangan', 'Jam Dinding'], ['Pulpen', 'Pensil'], ['Garpu', 'Sendok'], ['Bantal', 'Guling'], ['Dompet', 'Tas'], ['Mobil', 'Bus'], ['Pesawat', 'Helikopter'], ['Motor', 'Sepeda'], ['Kapal', 'Perahu'], ['Kereta Api', 'MRT'], ['Dokter', 'Perawat'], ['Guru', 'Dosen'], ['Polisi', 'Tentara'], ['Koki', 'Pelayan'], ['Pilot', 'Masinis'], ['Gitar', 'Piano'], ['Biola', 'Cello'], ['Drum', 'Kendang'], ['Radio', 'Podcast'], ['Televisi', 'Monitor'], ['Kamera', 'Webcam'], ['Lampu', 'Senter'], ['Kipas Angin', 'AC'], ['Kulkas', 'Freezer'], ['Mesin Cuci', 'Pengering'], ['Sepak Bola', 'Futsal'], ['Basket', 'Voli'], ['Bulu Tangkis', 'Tenis'], ['Renang', 'Selam'], ['Lari', 'Jalan Cepat'], ['Catur', 'Kartu'], ['Video Game', 'Papan Permainan'], ['Matahari', 'Bulan'], ['Bintang', 'Planet'], ['Awan', 'Kabut'], ['Hujan', 'Salju'], ['Petir', 'Guntur'], ['Sungai', 'Danau'], ['Laut', 'Samudra'], ['Gua', 'Terowongan'], ['Jembatan', 'Flyover'], ['Pintu', 'Jendela'], ['Atap', 'Plafon'], ['Lantai', 'Karpet'], ['Dapur', 'Ruang Makan'], ['Kamar Tidur', 'Kamar Mandi'], ['Sabun', 'Sampo'], ['Handuk', 'Keset'], ['Sisir', 'Cermin'], ['Odol', 'Sikat Gigi'], ['Minyak Wangi', 'Deodoran'], ['Topi', 'Helm'], ['Jaket', 'Sweter'], ['Celana', 'Rok'], ['Kaus Kaki', 'Sarung Tangan'], ['Emas', 'Perak'], ['Besi', 'Baja'], ['Kayu', 'Bambu'], ['Kertas', 'Kardus'], ['Plastik', 'Karet'], ['Kunci', 'Gembok'], ['Tangga', 'Lift'], ['Taman Ria', 'Kebun Binatang'], ['Kantor', 'Ruko'], ['Hotel', 'Apartemen'], ['Shopee', 'Tokopedia'], ['Grab', 'Gojek'], ['Indomaret', 'Alfamart'], ['Google', 'Yahoo'], ['Android', 'iOS'], ['Windows', 'Macintosh'], ['Spotify', 'Apple Music'], ['Zoom', 'Google Meet'], ['Facebook', 'Twitter'], ['Spider-Man', 'Batman'], ['Harry Potter', 'Percy Jackson'], ['K-Pop', 'J-Pop'], ['Anime', 'Kartun'], ['Marvel', 'DC'], ['Lipstik', 'Lipbalm'], ['Bedak', 'Foundation'], ['Maskara', 'Eyeliner'], ['Kemeja', 'Blus'], ['Jas', 'Blazer'], ['Kaus Kaki', 'Stocking'], ['Topi', 'Helm'], ['Jaket', 'Sweter'], ['Emas', 'Berlian'], ['Nike', 'Adidas'], ['Samsung', 'iPhone'], ['Honda', 'Yamaha'], ['Toyota', 'Mitsubishi'], ['Garuda Indonesia', 'Lion Air'], ['Starbucks', 'Kopi Kenangan'], ['Jantung', 'Paru-paru'], ['Otak', 'Sumsum'], ['Tulang', 'Otot'], ['Bakteri', 'Virus'], ['Dokter', 'Bidan'], ['Obat', 'Vitamin'], ['Mata', 'Telinga'], ['Tangan', 'Kaki'], ['Wayang', 'Ketoprak'], ['Gamelan', 'Angklung'], ['Kebaya', 'Batik'], ['Nasi Goreng', 'Nasi Uduk'], ['Rendang', 'Semur'], ['Pempek', 'Otak-otak'], ['Gudeg', 'Rawon'], ['Soto', 'Sup'], ['Teh Manis', 'Sirup'], ['Es Teler', 'Es Campur'], ['Krupuk', 'Emping'], ['Sambal', 'Saus'], ['Papeda', 'Sagu'], ['Mendaki', 'Berkemah'], ['Memasak', 'Memanggang'], ['Melukis', 'Menggambar'], ['Yoga', 'Pilates'], ['Catur', 'Halma'], ['Monas', 'Candi Borobudur'], ['Pulau Bali', 'Pulau Lombok'], ['Jakarta', 'Surabaya'], ['Palu', 'Obeng'], ['Gergaji', 'Kapak'], ['Semen', 'Pasir'], ['Batu Bata', 'Batako'], ['Cat', 'Pernis'], ['Loker', 'Lemari'], ['Meja Belajar', 'Meja Rias'], ['Sofa', 'Kursi Empuk'], ['Gorden', 'Tirai'], ['Kompor', 'Oven'], ['Wajan', 'Panci'], ['Sodet', 'Sendok Sayur'], ['Blender', 'Mixer'], ['Teko', 'Dispenser'], ['Sabun Cuci Piring', 'Deterjen'], ['Sapu', 'Pel'], ['Kemoceng', 'Vakum'], ['Ember', 'Gayung'], ['Jemuran', 'Gantungan Baju'], ['Setrika', 'Steamer'], ['Baterai', 'Aki'], ['Kabel', 'Kawat'], ['Wifi', 'Bluetooth'], ['Keyboard', 'Mouse'], ['Printer', 'Scanner'], ['Headphone', 'Speaker'], ['Remote', 'Joystick'], ['Duit', 'Koin'], ['Tabungan', 'Investasi'], ['Saham', 'Kripto'], ['Dompet Digital', 'Kartu Kredit'], ['Pajak', 'Tagihan'], ['Kwitansi', 'Nota'], ['Skripsi', 'Tesis'], ['Ijazah', 'Sertifikat'], ['Ujian', 'Kuis'], ['Bolos', 'Terlambat']
-        ];
+</div>
 
-        let currentPlayerIndex = 0;
-        let gameKeywords = [];
-        let keywordRevealed = false;
+<script>
+const keywords = [
+    ['Sapi','Kambing'],['Lebah','Semut'],['Elang','Burung Hantu'],['Kuda','Zebra'],
+    ['Kucing','Kelinci'],['Kura-kura','Siput'],['Buaya','Komodo'],['Pizza','Burger'],
+    ['Kopi','Teh'],['Jeruk','Lemon'],['Es Krim','Gelato'],['Bakso','Mie Ayam'],
+    ['Sate','Steak'],['Cokelat','Permen'],['Susu','Yogurt'],['Roti','Biskuit'],
+    ['Donat','Martabak'],['Sekolah','Kampus'],['Mall','Pasar'],['Bandara','Stasiun'],
+    ['Rumah Sakit','Puskesmas'],['Bioskop','Teater'],['Pantai','Kolam Renang'],
+    ['Hutan','Taman'],['Gunung','Bukit'],['Masjid','Gereja'],['Perpustakaan','Toko Buku'],
+    ['Laptop','Komputer'],['HP','Tablet'],['Sepatu','Sandal'],['Kacamata','Lensa Kontak'],
+    ['Payung','Jas Hujan'],['Jam Tangan','Jam Dinding'],['Pulpen','Pensil'],
+    ['Garpu','Sendok'],['Bantal','Guling'],['Dompet','Tas'],['Mobil','Bus'],
+    ['Pesawat','Helikopter'],['Motor','Sepeda'],['Kapal','Perahu'],['Kereta Api','MRT'],
+    ['Dokter','Perawat'],['Guru','Dosen'],['Polisi','Tentara'],['Koki','Pelayan'],
+    ['Pilot','Masinis'],['Gitar','Piano'],['Biola','Cello'],['Drum','Kendang'],
+    ['Radio','Podcast'],['Televisi','Monitor'],['Kamera','Webcam'],['Lampu','Senter'],
+    ['Kipas Angin','AC'],['Kulkas','Freezer'],['Mesin Cuci','Pengering'],
+    ['Sepak Bola','Futsal'],['Basket','Voli'],['Bulu Tangkis','Tenis'],['Renang','Selam'],
+    ['Lari','Jalan Cepat'],['Catur','Kartu'],['Video Game','Papan Permainan'],
+    ['Matahari','Bulan'],['Bintang','Planet'],['Awan','Kabut'],['Hujan','Salju'],
+    ['Petir','Guntur'],['Sungai','Danau'],['Laut','Samudra'],['Gua','Terowongan'],
+    ['Jembatan','Flyover'],['Pintu','Jendela'],['Atap','Plafon'],['Lantai','Karpet'],
+    ['Dapur','Ruang Makan'],['Kamar Tidur','Kamar Mandi'],['Sabun','Sampo'],
+    ['Handuk','Keset'],['Sisir','Cermin'],['Odol','Sikat Gigi'],['Minyak Wangi','Deodoran'],
+    ['Topi','Helm'],['Jaket','Sweter'],['Celana','Rok'],['Kaus Kaki','Sarung Tangan'],
+    ['Emas','Perak'],['Besi','Baja'],['Kayu','Bambu'],['Kertas','Kardus'],
+    ['Plastik','Karet'],['Kunci','Gembok'],['Tangga','Lift'],['Taman Ria','Kebun Binatang'],
+    ['Kantor','Ruko'],['Hotel','Apartemen'],['Shopee','Tokopedia'],['Grab','Gojek'],
+    ['Indomaret','Alfamart'],['Google','Yahoo'],['Android','iOS'],['Windows','Macintosh'],
+   ['K-Pop','J-Pop'],
+    ['Anime','Kartun'],['Marvel','DC'],['Lipstik','Lipbalm'],['Bedak','Foundation'],
+    ['Maskara','Eyeliner'],['Kemeja','Blus'],['Jas','Blazer'],['Nike','Adidas'],
+    ['Samsung','iPhone'],['Honda','Yamaha'],['Toyota','Mitsubishi'],
+    ['Garuda Indonesia','Lion Air'],['Starbucks','Kopi Kenangan'],['Jantung','Paru-paru'],
+    ['Otak','Sumsum'],['Tulang','Otot'],['Bakteri','Virus'],['Dokter','Bidan'],
+    ['Obat','Vitamin'],['Mata','Telinga'],['Tangan','Kaki'],['Wayang','Ketoprak'],
+    ['Gamelan','Angklung'],['Kebaya','Batik'],['Nasi Goreng','Nasi Uduk'],
+    ['Rendang','Semur'],['Pempek','Otak-otak'],['Gudeg','Rawon'],['Soto','Sup'],
+    ['Teh Manis','Sirup'],['Es Teler','Es Campur'],['Krupuk','Emping'],['Sambal','Saus'],
+    ['Papeda','Sagu'],['Mendaki','Berkemah'],['Memasak','Memanggang'],
+    ['Melukis','Menggambar'],['Yoga','Pilates'],['Catur','Halma'],
+    ['Monas','Candi Borobudur'],['Pulau Bali','Pulau Lombok'],['Jakarta','Surabaya'],
+    ['Palu','Obeng'],['Gergaji','Kapak'],['Semen','Pasir'],['Batu Bata','Batako'],
+    ['Cat','Pernis'],['Loker','Lemari'],['Meja Belajar','Meja Rias'],['Sofa','Kursi Empuk'],
+    ['Gorden','Tirai'],['Kompor','Oven'],['Wajan','Panci'],['Sodet','Sendok Sayur'],
+    ['Blender','Mixer'],['Teko','Dispenser'],['Sapu','Pel'],['Ember','Gayung'],
+    ['Setrika','Steamer'],['Keyboard','Mouse'],['Printer','Scanner'],['Headphone','Speaker'],
+    ['Duit','Koin'],['Tabungan','Investasi'],['Saham','Kripto'],['Dompet Digital','Kartu Kredit'],
+    ['Skripsi','Tesis'],['Ijazah','Sertifikat'],['Ujian','Kuis'],['Bolos','Terlambat']
+];
 
-        function startGame() {
-            // Pilih set keyword secara random
-            const selectedSet = keywords[Math.floor(Math.random() * keywords.length)];
-            
-            // Shuffle array untuk menentukan impostor secara random
-            const shuffledPlayers = [0, 1, 2, 3].sort(() => Math.random() - 0.5);
-            const impostorIndex = shuffledPlayers[0];
-            
-            // Tentukan keyword normal dan impostor
-            const normalKeyword = selectedSet[0];
-            const impostorKeyword = selectedSet[1];
-            
-            // Assign keywords ke setiap pemain
-            gameKeywords = [];
-            for (let i = 0; i < 4; i++) {
-                if (i === impostorIndex) {
-                    gameKeywords.push(impostorKeyword);
-                } else {
-                    gameKeywords.push(normalKeyword);
-                }
-            }
-            
-            // Reset game state
-            currentPlayerIndex = 0;
-            keywordRevealed = false;
-            
-            // Show player reveal screen
-            document.getElementById('gameSetup').classList.add('hidden');
-            document.getElementById('playerReveal').classList.add('active');
-            
-            showCurrentPlayer();
-        }
+let numPlayers = 4;
+let numImpostors = 1;
+let currentPlayer = 0;
+let gameKeywords = [];
+let revealed = false;
 
-        function showCurrentPlayer() {
-            const playerName = `Pemain ${currentPlayerIndex + 1}`;
-            const keyword = gameKeywords[currentPlayerIndex];
-            
-            document.getElementById('currentPlayer').textContent = playerName;
-            document.getElementById('playerKeyword').textContent = keyword;
-            document.getElementById('playerKeyword').classList.add('keyword-hidden');
-            
-            // Reset button visibility
-            document.getElementById('nextBtn').style.display = 'none';
-            document.getElementById('restartBtn').style.display = 'none';
-            keywordRevealed = false;
-        }
+function selectPlayers(n) {
+    numPlayers = n;
+    document.querySelectorAll('.count-btn').forEach(b => b.classList.remove('selected'));
+    document.querySelector(`.count-btn[data-val="${n}"]`).classList.add('selected');
+    updateImpostorOptions();
+    updateRulesText();
+}
 
-        function revealKeyword() {
-            if (!keywordRevealed) {
-                document.getElementById('playerKeyword').classList.remove('keyword-hidden');
-                keywordRevealed = true;
-                
-                // Show appropriate button
-                if (currentPlayerIndex < 3) {
-                    document.getElementById('nextBtn').style.display = 'inline-block';
-                } else {
-                    document.getElementById('restartBtn').style.display = 'inline-block';
-                }
-            }
-        }
+function selectImpostors(n) {
+    const maxImpostors = Math.floor(numPlayers / 2);
+    if (n > maxImpostors) return;
+    numImpostors = n;
+    document.querySelectorAll('.imp-btn').forEach(b => b.classList.remove('selected'));
+    document.querySelector(`.imp-btn[data-val="${n}"]`).classList.add('selected');
+    updateRulesText();
+}
 
-        function nextPlayer() {
-            currentPlayerIndex++;
-            showCurrentPlayer();
-        }
+function updateImpostorOptions() {
+    const maxImpostors = Math.floor(numPlayers / 2);
+    document.querySelectorAll('.imp-btn').forEach(b => {
+        const v = parseInt(b.dataset.val);
+        b.disabled = v > maxImpostors;
+    });
+    if (numImpostors > maxImpostors) {
+        numImpostors = 1;
+        document.querySelectorAll('.imp-btn').forEach(b => b.classList.remove('selected'));
+        document.querySelector('.imp-btn[data-val="1"]').classList.add('selected');
+    }
+    updateRulesText();
+}
 
-        function restartGame() {
-            currentPlayerIndex = 0;
-            gameKeywords = [];
-            keywordRevealed = false;
-            
-            document.getElementById('gameSetup').classList.remove('hidden');
-            document.getElementById('playerReveal').classList.remove('active');
-        }
-    </script>
+function updateRulesText() {
+    const crew = numPlayers - numImpostors;
+    document.getElementById('rulesText').textContent =
+        `${crew} pemain dapat keyword sama, ${numImpostors} impostor dapat keyword berbeda.`;
+}
+
+function buildDots() {
+    const wrap = document.getElementById('progressDots');
+    wrap.innerHTML = '';
+    for (let i = 0; i < numPlayers; i++) {
+        const d = document.createElement('div');
+        d.className = 'dot' + (i === 0 ? ' active' : '');
+        d.id = `dot${i}`;
+        wrap.appendChild(d);
+    }
+}
+
+function updateDots() {
+    for (let i = 0; i < numPlayers; i++) {
+        const d = document.getElementById(`dot${i}`);
+        if (i < currentPlayer) d.className = 'dot done';
+        else if (i === currentPlayer) d.className = 'dot active';
+        else d.className = 'dot';
+    }
+}
+
+function startGame() {
+    const set = keywords[Math.floor(Math.random() * keywords.length)];
+    const normalKw = set[0];
+    const impostorKw = set[1];
+
+    const shuffled = [...Array(numPlayers).keys()].sort(() => Math.random() - 0.5);
+    const impostorIndices = new Set(shuffled.slice(0, numImpostors));
+
+    gameKeywords = Array.from({length: numPlayers}, (_, i) =>
+        impostorIndices.has(i) ? impostorKw : normalKw
+    );
+
+    currentPlayer = 0;
+    revealed = false;
+
+    document.getElementById('screenSetup').classList.remove('active');
+    document.getElementById('screenReveal').classList.add('active');
+
+    buildDots();
+    showPlayer();
+}
+
+function showPlayer() {
+    const n = currentPlayer + 1;
+    document.getElementById('playerNum').textContent = `PEMAIN ${n}`;
+    document.getElementById('playerTitle').textContent = `Giliran Pemain ${n}!`;
+    document.getElementById('keywordBox').textContent = gameKeywords[currentPlayer];
+    document.getElementById('keywordBox').className = 'keyword-box locked';
+    document.getElementById('lockOverlay').classList.remove('hidden');
+    document.getElementById('keywordHint').textContent = 'Pastikan pemain lain tidak melihat layarmu';
+    document.getElementById('nextBtn').style.display = 'none';
+    document.getElementById('doneBtn').style.display = 'none';
+    document.getElementById('goBanner').style.display = 'none';
+    revealed = false;
+    updateDots();
+}
+
+function revealKeyword() {
+    if (revealed) return;
+    revealed = true;
+    document.getElementById('keywordBox').className = 'keyword-box revealed';
+    document.getElementById('lockOverlay').classList.add('hidden');
+    document.getElementById('keywordHint').textContent = '✅ Sudah dilihat? Serahkan ke pemain berikutnya';
+
+    const isLast = currentPlayer === numPlayers - 1;
+    if (isLast) {
+        document.getElementById('doneBtn').style.display = 'flex';
+        document.getElementById('goBanner').style.display = 'block';
+        // Mark last dot done
+        document.getElementById(`dot${currentPlayer}`).className = 'dot done';
+    } else {
+        document.getElementById('nextBtn').style.display = 'flex';
+    }
+}
+
+function nextPlayer() {
+    document.getElementById(`dot${currentPlayer}`).className = 'dot done';
+    currentPlayer++;
+    showPlayer();
+}
+
+function restartGame() {
+    document.getElementById('screenReveal').classList.remove('active');
+    document.getElementById('screenSetup').classList.add('active');
+}
+
+// init
+updateImpostorOptions();
+updateRulesText();
+</script>
 </body>
 </html>

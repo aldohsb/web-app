@@ -25,6 +25,9 @@
       color:var(--text); padding:3px 8px 3px 10px; border-radius:20px;
       font-size:12px; font-weight:600;
     }
+    .sub-tag.is-search {
+      border-color:#7b61ff; background:rgba(123,97,255,.1); color:#b09fff;
+    }
     .sub-tag .rm { background:none; border:none; color:var(--muted); cursor:pointer; font-size:13px; padding:0 1px; line-height:1; }
     .sub-tag .rm:hover { color:#ff6b6b; }
     #sub-input { background:var(--bg); border:1px solid var(--border); color:var(--text); padding:5px 10px; border-radius:20px; font-size:13px; width:120px; outline:none; transition:border-color .2s; }
@@ -34,8 +37,19 @@
     #add-sub-btn:hover { background:rgba(255,69,0,.3); }
 
     #sort-sel { background:var(--bg); border:1px solid var(--border); color:var(--text); padding:5px 8px; border-radius:20px; font-size:13px; outline:none; cursor:pointer; }
+    #top-time-sel { background:var(--bg); border:1px solid var(--accent); color:var(--accent); padding:5px 8px; border-radius:20px; font-size:13px; outline:none; cursor:pointer; display:none; font-weight:600; }
+    #top-time-sel:focus { outline:none; }
     #go-btn { background:var(--accent); color:#fff; border:none; padding:6px 16px; border-radius:20px; font-size:13px; font-weight:700; cursor:pointer; transition:opacity .2s; white-space:nowrap; }
     #go-btn:hover { opacity:.85; }
+
+    /* Search bar */
+    #search-wrap { position:relative; display:flex; align-items:center; }
+    #search-input { background:var(--bg); border:1px solid var(--border); color:var(--text); padding:5px 30px 5px 10px; border-radius:20px; font-size:13px; width:150px; outline:none; transition:border-color .2s,width .25s; }
+    #search-input:focus { border-color:var(--accent); width:200px; }
+    #search-input::placeholder { color:var(--muted); }
+    #search-clear { position:absolute; right:8px; background:none; border:none; color:var(--muted); cursor:pointer; font-size:14px; display:none; line-height:1; padding:0; }
+    #search-clear:hover { color:var(--text); }
+    #search-count { font-size:11px; color:var(--accent); white-space:nowrap; display:none; }
 
     /* Hide-seen toggle */
     #hide-seen-btn {
@@ -208,7 +222,7 @@
   <div id="sub-area">
     <!-- subreddit tags injected here -->
   </div>
-  <input id="sub-input" placeholder="add subreddit…" />
+  <input id="sub-input" placeholder="subreddit or &quot;search term&quot;…" />
   <button id="add-sub-btn">+ Add</button>
 
   <select id="sort-sel">
@@ -217,9 +231,22 @@
     <option value="top">🏆 Top</option>
     <option value="rising">📈 Rising</option>
   </select>
+  <select id="top-time-sel" title="Time range for Top">
+    <option value="day">Today</option>
+    <option value="week">This Week</option>
+    <option value="month">This Month</option>
+    <option value="year">This Year</option>
+    <option value="all">All Time</option>
+  </select>
   <button id="go-btn">Load</button>
 
   <div class="spacer"></div>
+
+  <div id="search-wrap">
+    <input id="search-input" placeholder="🔍 Search posts…" autocomplete="off" />
+    <button id="search-clear" title="Clear search">✕</button>
+  </div>
+  <span id="search-count"></span>
 
   <div id="media-filter">
     <button class="mf-btn active" data-filter="all">All</button>
@@ -271,6 +298,7 @@
     <span><kbd>M</kbd> Mute</span>
     <span><kbd>H</kbd> Hide seen on/off</span>
     <span><kbd>Z</kbd> Zoom</span>
+    <span><kbd>O</kbd> Open in Reddit</span>
     <span><kbd>Esc</kbd> Close</span>
     <div id="vcounter">–</div>
   </div>
@@ -287,14 +315,16 @@ const PROXIES = [
 // ══ STATE ══
 let posts = [];
 let afterTokens = {}; // { subName: afterToken }
-let activeSubs = ['funny']; // list of subreddits
+let activeSubs = [{ type:'sub', value:'funny' }]; // list of {type:'sub'|'search', value}
 let curSort = 'hot';
+let curTopTime = 'day'; // time filter for "top" sort
 let curIdx = 0;
 let busy = false;
 let videoZoom = true;
 let hlsInstance = null;
 let hideSeen = false;
 let mediaFilter = 'all'; // 'all' | 'video' | 'image'
+let searchQuery = ''; // current search filter
 
 // ══ SEEN POSTS (localStorage) ══
 const SEEN_KEY = 'redditpx_seen';
@@ -322,7 +352,10 @@ function updateCardVisibility(card) {
   const isSeen = hideSeen && card.classList.contains('seen');
   const type = card.dataset.mtype; // 'image' or 'video'
   const filteredOut = mediaFilter !== 'all' && type !== mediaFilter;
-  card.style.display = (isSeen || filteredOut) ? 'none' : '';
+  const idx = parseInt(card.dataset.i);
+  const post = posts[idx];
+  const searchedOut = searchQuery && post && !post.d.title.toLowerCase().includes(searchQuery);
+  card.style.display = (isSeen || filteredOut || searchedOut) ? 'none' : '';
 }
 
 function setMediaFilter(f) {
@@ -343,19 +376,23 @@ function saveFavorites() {
 
 function saveCurrentAsFavorite() {
   if (activeSubs.length === 0) return;
-  const defaultName = activeSubs.join('+');
+  const defaultName = activeSubs.map(x => x.type === 'search' ? `"${x.value}"` : x.value).join('+');
   const name = prompt('Nama favorit ini:', defaultName);
   if (!name) return;
-  // Remove duplicate name
   favorites = favorites.filter(f => f.name !== name);
-  favorites.push({ name: name.trim(), subs: [...activeSubs] });
+  favorites.push({ name: name.trim(), items: [...activeSubs] });
   saveFavorites();
   renderFavPanel();
   updateFavBtn();
 }
 
 function loadFavorite(fav) {
-  activeSubs = [...fav.subs];
+  // Support both old format (subs:[]) and new format (items:[])
+  if (fav.items) {
+    activeSubs = [...fav.items];
+  } else if (fav.subs) {
+    activeSubs = fav.subs.map(s => ({ type:'sub', value:s }));
+  }
   renderSubTags();
   closeFavPanel();
   fetchAllSubs(false);
@@ -382,7 +419,9 @@ function renderFavPanel() {
       const loadBtn = document.createElement('button');
       loadBtn.className = 'fav-load';
       loadBtn.textContent = fav.name;
-      loadBtn.title = fav.subs.map(s => 'r/'+s).join(' + ');
+      loadBtn.title = fav.items
+        ? fav.items.map(x => x.type==='search' ? `"${x.value}"` : 'r/'+x.value).join(' + ')
+        : (fav.subs||[]).map(s=>'r/'+s).join(' + ');
       loadBtn.addEventListener('click', () => loadFavorite(fav));
       const delBtn = document.createElement('button');
       delBtn.className = 'fav-del';
@@ -423,28 +462,40 @@ function fmt(n) {
 function renderSubTags() {
   const area = $('sub-area');
   area.innerHTML = '';
-  activeSubs.forEach(sub => {
+  activeSubs.forEach((item, i) => {
     const tag = document.createElement('div');
-    tag.className = 'sub-tag';
-    tag.innerHTML = `r/${sub} <button class="rm" data-sub="${sub}">✕</button>`;
-    tag.querySelector('.rm').addEventListener('click', () => removeSub(sub));
+    tag.className = 'sub-tag' + (item.type === 'search' ? ' is-search' : '');
+    const label = item.type === 'search' ? `🔍 "${item.value}"` : `r/${item.value}`;
+    tag.innerHTML = `${label} <button class="rm">✕</button>`;
+    tag.querySelector('.rm').addEventListener('click', () => removeItem(i));
     area.appendChild(tag);
   });
-  // Show multi-mode label on cards
   if (activeSubs.length > 1) grid.classList.add('multi-mode');
   else grid.classList.remove('multi-mode');
 }
 
-function addSub(sub) {
-  sub = sub.trim().replace(/^r\//, '').toLowerCase();
-  if (!sub || activeSubs.includes(sub)) return;
-  activeSubs.push(sub);
+function addSub(raw) {
+  raw = raw.trim();
+  if (!raw) return;
+  // Detect search: wrapped in quotes, or contains spaces
+  const isSearch = /^["'].*["']$/.test(raw) || raw.includes(' ');
+  if (isSearch) {
+    const val = raw.replace(/^["']|["']$/g, '').trim();
+    if (!val) return;
+    if (activeSubs.some(x => x.type === 'search' && x.value.toLowerCase() === val.toLowerCase())) return;
+    activeSubs.push({ type:'search', value:val });
+  } else {
+    const val = raw.replace(/^r\//, '').toLowerCase();
+    if (!val) return;
+    if (activeSubs.some(x => x.type === 'sub' && x.value === val)) return;
+    activeSubs.push({ type:'sub', value:val });
+  }
   renderSubTags();
 }
 
-function removeSub(sub) {
-  activeSubs = activeSubs.filter(s => s !== sub);
-  if (activeSubs.length === 0) activeSubs = ['funny'];
+function removeItem(i) {
+  activeSubs.splice(i, 1);
+  if (activeSubs.length === 0) activeSubs = [{ type:'sub', value:'funny' }];
   renderSubTags();
 }
 
@@ -482,25 +533,37 @@ function getMedia(d) {
     return { type:'image', url, thumb:dec(d.thumbnail) };
   }
   if (/\.mp4(\?|$)/i.test(url)) return { type:'video', url, fallbacks:[url], thumb:dec(d.thumbnail) };
-  if (hint === 'image' || /\.(jpg|jpeg|png|webp)(\?|$)/i.test(url)) {
+  // Only treat as image if Reddit itself doesn't flag this as a video post
+  if (!d.is_video && (hint === 'image' || /\.(jpg|jpeg|png|webp)(\?|$)/i.test(url))) {
     const prev = dec(d.preview?.images?.[0]?.source?.url || '');
     return { type:'image', url:prev||url, thumb:prev||dec(d.thumbnail)||url };
   }
-  if (/imgur\.com\//.test(url) && !/\.(jpg|png|gif|mp4|gifv)$/i.test(url)) {
+  if (!d.is_video && /imgur\.com\//.test(url) && !/\.(jpg|png|gif|mp4|gifv)$/i.test(url)) {
     return { type:'image', url:url.replace('imgur.com/','i.imgur.com/')+'.jpg', thumb:dec(d.thumbnail) };
   }
   if (d.preview?.images?.[0]) {
     const vidV = dec(d.preview.images[0].variants?.mp4?.source?.url || '');
     if (vidV) return { type:'video', url:vidV, fallbacks:[vidV], thumb:dec(d.thumbnail) };
+    // If Reddit flags as video but we only have a preview image, still mark as video
+    if (d.is_video) return { type:'video', url:dec(d.preview.images[0].source.url), fallbacks:[], thumb:dec(d.thumbnail) };
     const src = dec(d.preview.images[0].source.url);
     return { type:'image', url:src, thumb:src };
   }
   return null;
 }
 
-// ══ FETCH — single sub ══
-async function fetchOneSub(sub, sort, aft) {
-  const base = `https://www.reddit.com/r/${sub}/${sort}.json?limit=25&raw_json=1${aft ? '&after='+aft : ''}`;
+// ══ FETCH — single item (sub or search) ══
+async function fetchOneItem(item, sort, aft) {
+  let base;
+  if (item.type === 'search') {
+    // Reddit search API: /search.json?q=...&type=link&include_over_18=on
+    const timeParam = sort === 'top' ? `&t=${curTopTime}` : '';
+    const sortParam = sort === 'top' ? 'top' : sort === 'new' ? 'new' : 'relevance';
+    base = `https://www.reddit.com/search.json?q=${encodeURIComponent(item.value)}&type=link&include_over_18=on&sort=${sortParam}${timeParam}&limit=25&raw_json=1${aft ? '&after='+aft : ''}`;
+  } else {
+    const timeParam = sort === 'top' ? `&t=${curTopTime}` : '';
+    base = `https://www.reddit.com/r/${item.value}/${sort}.json?limit=25&raw_json=1${timeParam}${aft ? '&after='+aft : ''}`;
+  }
   for (const makeUrl of PROXIES) {
     try {
       const r = await fetch(makeUrl(base), { headers: { 'User-Agent':'redditpx-clone/1.0' } });
@@ -512,7 +575,7 @@ async function fetchOneSub(sub, sort, aft) {
   return null;
 }
 
-// ══ FETCH ALL SUBS (parallel) ══
+// ══ FETCH ALL (parallel) ══
 async function fetchAllSubs(isLoadMore = false) {
   if (busy) return;
   busy = true;
@@ -524,8 +587,9 @@ async function fetchAllSubs(isLoadMore = false) {
     grid.innerHTML = '';
   }
 
-  // Fetch all subs in parallel
-  const results = await Promise.all(activeSubs.map(sub => fetchOneSub(sub, curSort, isLoadMore ? afterTokens[sub] : null)));
+  // Use item key (type+value) as token key
+  const itemKey = item => item.type + ':' + item.value;
+  const results = await Promise.all(activeSubs.map(item => fetchOneItem(item, curSort, isLoadMore ? afterTokens[itemKey(item)] : null)));
 
   loader.classList.remove('on');
   busy = false;
@@ -534,23 +598,25 @@ async function fetchAllSubs(isLoadMore = false) {
   let fresh = [];
 
   results.forEach((data, i) => {
-    const sub = activeSubs[i];
+    const item = activeSubs[i];
+    const key = itemKey(item);
     if (!data) { anyFailed = true; return; }
-    afterTokens[sub] = data.after || null;
+    afterTokens[key] = data.after || null;
     const children = data.children || [];
+    // Use subreddit name from post data for search results
     const subPosts = children.map(c => {
       const m = getMedia(c.data);
-      return m ? { d: c.data, m, sub } : null;
+      const subName = item.type === 'search' ? (c.data.subreddit || item.value) : item.value;
+      return m ? { d: c.data, m, sub: subName, itemKey: key } : null;
     }).filter(Boolean);
     fresh.push(...subPosts);
   });
 
   if (anyFailed && fresh.length === 0) {
-    alert('Could not load subreddits. May be private or NSFW-gated.\nTry: python -m http.server');
+    alert('Could not load. May be private or NSFW-gated.\nTry: python -m http.server');
     return;
   }
 
-  // Shuffle if multi-sub so they interleave nicely
   if (activeSubs.length > 1) fresh = shuffleInterleave(fresh);
 
   posts = isLoadMore ? [...posts, ...fresh] : fresh;
@@ -558,16 +624,15 @@ async function fetchAllSubs(isLoadMore = false) {
   renderCards(fresh);
   updateStatus();
 
-  // Show load more if any sub still has pages
-  const hasMore = activeSubs.some(s => afterTokens[s]);
+  const hasMore = activeSubs.some(item => afterTokens[itemKey(item)]);
   $('load-more').style.display = hasMore ? 'block' : 'none';
 }
 
-// Interleave posts from different subs
+// Interleave posts from different sources
 function shuffleInterleave(items) {
-  // Group by sub, then round-robin
+  // Group by itemKey (type:value), then round-robin
   const groups = {};
-  items.forEach(p => { (groups[p.sub] = groups[p.sub]||[]).push(p); });
+  items.forEach(p => { const k = p.itemKey||p.sub; (groups[k] = groups[k]||[]).push(p); });
   const keys = Object.keys(groups);
   const result = [];
   let i = 0;
@@ -578,13 +643,29 @@ function shuffleInterleave(items) {
   return result;
 }
 
+function applySearch(q) {
+  searchQuery = q.toLowerCase().trim();
+  document.querySelectorAll('.card').forEach(c => updateCardVisibility(c));
+  // Show/hide clear button
+  $('search-clear').style.display = q ? '' : 'none';
+  // Count visible results
+  if (searchQuery) {
+    const visible = [...document.querySelectorAll('.card')].filter(c => c.style.display !== 'none').length;
+    $('search-count').textContent = `${visible} results`;
+    $('search-count').style.display = '';
+  } else {
+    $('search-count').style.display = 'none';
+  }
+}
+
 function updateStatus() {
   const seenCount = posts.filter(p => seenIds.has(p.d.id)).length;
   const videoCount = posts.filter(p => p.m.type === 'video').length;
   const imageCount = posts.filter(p => p.m.type === 'image').length;
-  const subStr = activeSubs.length > 1 ? activeSubs.map(s=>'r/'+s).join(' + ') : 'r/'+activeSubs[0];
+  const subStr = activeSubs.map(x => x.type === 'search' ? `"${x.value}"` : 'r/'+x.value).join(' + ');
   const filterStr = mediaFilter === 'all' ? `${videoCount}v ${imageCount}i` : mediaFilter === 'video' ? `${videoCount} video/gif` : `${imageCount} image`;
-  $('status').textContent = `${subStr} · ${filterStr} · ${seenCount} seen`;
+  const sortLabel = curSort === 'top' ? `top/${curTopTime}` : curSort;
+  $('status').textContent = `${subStr} · ${sortLabel} · ${filterStr} · ${seenCount} seen`;
 }
 
 // ══ RENDER GRID ══
@@ -598,7 +679,11 @@ function renderCards(items) {
     card.className = 'card';
     card.dataset.i = idx;
     card.dataset.id = p.d.id;
-    card.dataset.mtype = p.m.type; // 'image' or 'video'
+    // Determine true media type for filtering:
+    // A post is "video" if getMedia says video, OR if reddit marks it as video/gif
+    const isActuallyVideo = p.m.type === 'video';
+    const isActuallyImage = p.m.type === 'image' && !p.d.is_video;
+    card.dataset.mtype = isActuallyVideo ? 'video' : 'image';
 
     if (seenIds.has(p.d.id)) card.classList.add('seen');
 
@@ -817,6 +902,14 @@ function toggleHideSeen() {
 }
 
 // ══ EVENTS ══
+function syncSortUI() {
+  curSort = $('sort-sel').value;
+  $('top-time-sel').style.display = curSort === 'top' ? 'inline-block' : 'none';
+}
+$('sort-sel').addEventListener('change', syncSortUI);
+$('top-time-sel').addEventListener('change', () => {
+  curTopTime = $('top-time-sel').value;
+});
 $('add-sub-btn').addEventListener('click', () => {
   const v = $('sub-input').value;
   if (v.trim()) { addSub(v); $('sub-input').value = ''; }
@@ -833,10 +926,19 @@ $('save-fav-btn').addEventListener('click', saveCurrentAsFavorite);
 document.addEventListener('click', e => {
   if (!$('fav-panel').contains(e.target) && e.target !== $('fav-btn')) closeFavPanel();
 });
-$('go-btn').addEventListener('click', () => fetchAllSubs(false));
+$('go-btn').addEventListener('click', () => {
+  curSort = $('sort-sel').value;
+  curTopTime = $('top-time-sel').value;
+  fetchAllSubs(false);
+});
 $('load-more').addEventListener('click', () => fetchAllSubs(true));
 $('hide-seen-btn').addEventListener('click', toggleHideSeen);
 $('clear-seen-btn').addEventListener('click', () => { if(confirm('Hapus semua riwayat post yang sudah dilihat?')) clearSeen(); });
+
+// Search events
+$('search-input').addEventListener('input', e => applySearch(e.target.value));
+$('search-input').addEventListener('keydown', e => { if(e.key==='Escape'){ $('search-input').value=''; applySearch(''); $('search-input').blur(); } });
+$('search-clear').addEventListener('click', () => { $('search-input').value=''; applySearch(''); });
 $('close-v').addEventListener('click', closeViewer);
 $('prev').addEventListener('click', () => go(-1));
 $('next').addEventListener('click', () => go(1));
@@ -853,6 +955,9 @@ viewer.addEventListener('touchstart', () => {
 document.addEventListener('keydown', e => {
   if (!viewer.classList.contains('open')) {
     if (e.key === 'Enter') $('go-btn').click();
+    if (e.key === '/' && e.target !== $('search-input') && e.target !== $('sub-input')) {
+      e.preventDefault(); $('search-input').focus(); $('search-input').select();
+    }
     return;
   }
   const vid = mWrap.querySelector('video');
@@ -864,6 +969,11 @@ document.addEventListener('keydown', e => {
     case 'm': case 'M': if(vid) vid.muted=!vid.muted; break;
     case 'z': case 'Z': toggleZoom(); break;
     case 'h': case 'H': toggleHideSeen(); break;
+    case 'o': case 'O': {
+      const p = posts[curIdx];
+      if (p) window.open('https://reddit.com'+p.d.permalink, '_blank');
+      break;
+    }
   }
 });
 
@@ -875,6 +985,7 @@ viewer.addEventListener('touchend', e=>{
 }, {passive:true});
 
 // ══ INIT ══
+syncSortUI();
 renderSubTags();
 updateFavBtn();
 fetchAllSubs(false);
