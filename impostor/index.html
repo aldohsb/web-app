@@ -435,55 +435,103 @@
 </div>
 
 <script>
+// Pasangan kata ramah anak — satu kategori tapi tidak mudah ditebak
+// [kata normal (mayoritas), kata impostor (minoritas)]
 const keywords = [
-    ['Sapi','Kambing'],['Lebah','Semut'],['Elang','Burung Hantu'],['Kuda','Zebra'],
-    ['Kucing','Kelinci'],['Kura-kura','Siput'],['Buaya','Komodo'],['Pizza','Burger'],
-    ['Kopi','Teh'],['Jeruk','Lemon'],['Es Krim','Gelato'],['Bakso','Mie Ayam'],
-    ['Sate','Steak'],['Cokelat','Permen'],['Susu','Yogurt'],['Roti','Biskuit'],
-    ['Donat','Martabak'],['Sekolah','Kampus'],['Mall','Pasar'],['Bandara','Stasiun'],
-    ['Rumah Sakit','Puskesmas'],['Bioskop','Teater'],['Pantai','Kolam Renang'],
-    ['Hutan','Taman'],['Gunung','Bukit'],['Masjid','Gereja'],['Perpustakaan','Toko Buku'],
-    ['Laptop','Komputer'],['HP','Tablet'],['Sepatu','Sandal'],['Kacamata','Lensa Kontak'],
-    ['Payung','Jas Hujan'],['Jam Tangan','Jam Dinding'],['Pulpen','Pensil'],
-    ['Garpu','Sendok'],['Bantal','Guling'],['Dompet','Tas'],['Mobil','Bus'],
-    ['Pesawat','Helikopter'],['Motor','Sepeda'],['Kapal','Perahu'],['Kereta Api','MRT'],
-    ['Dokter','Perawat'],['Guru','Dosen'],['Polisi','Tentara'],['Koki','Pelayan'],
-    ['Pilot','Masinis'],['Gitar','Piano'],['Biola','Cello'],['Drum','Kendang'],
-    ['Radio','Podcast'],['Televisi','Monitor'],['Kamera','Webcam'],['Lampu','Senter'],
-    ['Kipas Angin','AC'],['Kulkas','Freezer'],['Mesin Cuci','Pengering'],
-    ['Sepak Bola','Futsal'],['Basket','Voli'],['Bulu Tangkis','Tenis'],['Renang','Selam'],
-    ['Lari','Jalan Cepat'],['Catur','Kartu'],['Video Game','Papan Permainan'],
-    ['Matahari','Bulan'],['Bintang','Planet'],['Awan','Kabut'],['Hujan','Salju'],
-    ['Petir','Guntur'],['Sungai','Danau'],['Laut','Samudra'],['Gua','Terowongan'],
-    ['Jembatan','Flyover'],['Pintu','Jendela'],['Atap','Plafon'],['Lantai','Karpet'],
-    ['Dapur','Ruang Makan'],['Kamar Tidur','Kamar Mandi'],['Sabun','Sampo'],
-    ['Handuk','Keset'],['Sisir','Cermin'],['Odol','Sikat Gigi'],['Minyak Wangi','Deodoran'],
-    ['Topi','Helm'],['Jaket','Sweter'],['Celana','Rok'],['Kaus Kaki','Sarung Tangan'],
-    ['Emas','Perak'],['Besi','Baja'],['Kayu','Bambu'],['Kertas','Kardus'],
-    ['Plastik','Karet'],['Kunci','Gembok'],['Tangga','Lift'],['Taman Ria','Kebun Binatang'],
-    ['Kantor','Ruko'],['Hotel','Apartemen'],['Shopee','Tokopedia'],['Grab','Gojek'],
-    ['Indomaret','Alfamart'],['Google','Yahoo'],['Android','iOS'],['Windows','Macintosh'],
-   ['K-Pop','J-Pop'],
-    ['Anime','Kartun'],['Marvel','DC'],['Lipstik','Lipbalm'],['Bedak','Foundation'],
-    ['Maskara','Eyeliner'],['Kemeja','Blus'],['Jas','Blazer'],['Nike','Adidas'],
-    ['Samsung','iPhone'],['Honda','Yamaha'],['Toyota','Mitsubishi'],
-    ['Garuda Indonesia','Lion Air'],['Starbucks','Kopi Kenangan'],['Jantung','Paru-paru'],
-    ['Otak','Sumsum'],['Tulang','Otot'],['Bakteri','Virus'],['Dokter','Bidan'],
-    ['Obat','Vitamin'],['Mata','Telinga'],['Tangan','Kaki'],['Wayang','Ketoprak'],
-    ['Gamelan','Angklung'],['Kebaya','Batik'],['Nasi Goreng','Nasi Uduk'],
-    ['Rendang','Semur'],['Pempek','Otak-otak'],['Gudeg','Rawon'],['Soto','Sup'],
-    ['Teh Manis','Sirup'],['Es Teler','Es Campur'],['Krupuk','Emping'],['Sambal','Saus'],
-    ['Papeda','Sagu'],['Mendaki','Berkemah'],['Memasak','Memanggang'],
-    ['Melukis','Menggambar'],['Yoga','Pilates'],['Catur','Halma'],
-    ['Monas','Candi Borobudur'],['Pulau Bali','Pulau Lombok'],['Jakarta','Surabaya'],
-    ['Palu','Obeng'],['Gergaji','Kapak'],['Semen','Pasir'],['Batu Bata','Batako'],
-    ['Cat','Pernis'],['Loker','Lemari'],['Meja Belajar','Meja Rias'],['Sofa','Kursi Empuk'],
-    ['Gorden','Tirai'],['Kompor','Oven'],['Wajan','Panci'],['Sodet','Sendok Sayur'],
-    ['Blender','Mixer'],['Teko','Dispenser'],['Sapu','Pel'],['Ember','Gayung'],
-    ['Setrika','Steamer'],['Keyboard','Mouse'],['Printer','Scanner'],['Headphone','Speaker'],
-    ['Duit','Koin'],['Tabungan','Investasi'],['Saham','Kripto'],['Dompet Digital','Kartu Kredit'],
-    ['Skripsi','Tesis'],['Ijazah','Sertifikat'],['Ujian','Kuis'],['Bolos','Terlambat']
+    // Hewan — mirip tapi berbeda karakter
+    ['Kucing','Kelinci'],       // sama-sama berbulu lucu, tapi kelinci bukan hewan rumahan tipikal
+    ['Ikan','Katak'],           // sama-sama hidup di air, tapi katak bisa darat juga
+    ['Gajah','Badak'],          // sama-sama hewan besar, tapi jarang disamain
+    ['Monyet','Tupai'],         // sama-sama suka manjat pohon
+    ['Singa','Harimau'],        // sama-sama kucing besar buas
+    ['Ayam','Bebek'],           // sama-sama unggas di kampung
+    ['Kuda','Sapi'],            // sama-sama hewan besar berkaki empat di ladang
+    ['Lebah','Kupu-kupu'],      // sama-sama terbang dan hinggap di bunga
+    ['Ulat','Cacing'],          // sama-sama panjang dan merayap
+    ['Buaya','Kadal'],          // sama-sama reptil bersisik
+    ['Pinguin','Bebek'],        // sama-sama hewan bisa berenang tapi tidak bisa terbang jauh
+    ['Lumba-lumba','Paus'],     // sama-sama hewan laut besar yang pintar
+
+    // Makanan & minuman — satu kategori, beda jauh rasanya
+    ['Es Krim','Puding'],       // sama-sama makanan dingin manis
+    ['Nasi','Roti'],            // sama-sama makanan pokok mengenyangkan
+    ['Permen','Cokelat'],       // sama-sama camilan manis
+    ['Apel','Mangga'],          // sama-sama buah manis segar
+    ['Pisang','Pepaya'],        // sama-sama buah kuning yang lunak
+    ['Bakso','Nugget'],         // sama-sama makanan bulat/goreng favorit anak
+    ['Susu','Jus Jeruk'],       // sama-sama minuman sehat untuk anak
+    ['Keripik','Biskuit'],      // sama-sama cemilan renyah
+    ['Mie','Bihun'],            // sama-sama makanan berkuah panjang
+    ['Semangka','Melon'],       // sama-sama buah besar berisi air
+    ['Tahu','Tempe'],           // sama-sama makanan dari kedelai
+    ['Telur Goreng','Orak-arik'],// sama-sama masakan dari telur
+
+    // Benda sehari-hari — fungsi mirip tapi beda nama
+    ['Penghapus','Tip-ex'],     // sama-sama untuk menghapus tulisan
+    ['Buku','Majalah'],         // sama-sama bacaan dari kertas
+    ['Tas Sekolah','Koper'],    // sama-sama wadah bawaan bepergian
+    ['Sendok','Garpu'],         // sama-sama alat makan
+    ['Sapu','Pel'],             // sama-sama alat bersih-bersih lantai
+    ['Gunting','Cutter'],       // sama-sama alat pemotong
+    ['Lilin','Senter'],         // sama-sama sumber cahaya saat gelap
+    ['Ember','Gayung'],         // sama-sama alat untuk air
+    ['Bantal','Guling'],        // sama-sama benda untuk tidur
+    ['Kunci','Gembok'],         // sama-sama alat pengunci
+    ['Kalender','Jam'],         // sama-sama alat penunjuk waktu
+    ['Sisir','Sikat Rambut'],   // sama-sama alat untuk merapikan rambut
+
+    // Tempat — mirip tapi beda
+    ['Pantai','Sungai'],        // sama-sama tempat main air
+    ['Taman','Kebun'],          // sama-sama tempat penuh tanaman hijau
+    ['Sekolah','Les'],          // sama-sama tempat belajar
+    ['Rumah','Tenda'],          // sama-sama tempat tinggal/bermalam
+    ['Pasar','Warung'],         // sama-sama tempat beli makanan
+    ['Kolam Renang','Danau'],   // sama-sama tempat berenang
+    ['Lapangan','Taman Bermain'],// sama-sama tempat bermain outdoor
+    ['Hutan','Kebun Binatang'], // sama-sama tempat banyak hewan
+
+    // Kendaraan — mirip tapi beda
+    ['Sepeda','Skuter'],        // sama-sama kendaraan kecil dikayuh/dikendarai anak
+    ['Mobil','Truk'],           // sama-sama kendaraan beroda empat di jalan
+    ['Kapal','Perahu'],         // sama-sama kendaraan di air
+    ['Pesawat','Balon Udara'],  // sama-sama kendaraan di langit
+
+    // Pekerjaan/tokoh — mudah dikenal anak
+    ['Dokter','Bidan'],         // sama-sama yang merawat orang sakit
+    ['Guru','Pelatih'],         // sama-sama yang mengajari orang lain
+    ['Polisi','Satpam'],        // sama-sama penjaga keamanan
+    ['Koki','Penjual Bakso'],   // sama-sama yang memasak untuk orang lain
+    ['Petani','Nelayan'],       // sama-sama mencari bahan makanan dari alam
+
+    // Alam & cuaca
+    ['Hujan','Embun'],          // sama-sama air dari langit/udara
+    ['Bintang','Bulan'],        // sama-sama terlihat di malam hari di langit
+    ['Gunung','Bukit'],         // sama-sama gundukan tanah besar
+    ['Api','Matahari'],         // sama-sama panas dan menyala/bersinar
+    ['Angin','Topan'],          // sama-sama udara bergerak
+    ['Batu','Pasir'],           // sama-sama benda keras dari tanah
+    ['Pelangi','Awan'],         // sama-sama terlihat di langit setelah hujan
+
+    // Mainan & hiburan
+    ['Boneka','Action Figure'], // sama-sama mainan berbentuk orang/karakter
+    ['Balon','Gelembung Sabun'],// sama-sama benda bundar yang bisa melayang
+    ['Layangan','Pesawat Kertas'],// sama-sama benda terbang buatan tangan
+    ['Puzzle','Lego'],          // sama-sama mainan susun-menyusun
+    ['Bola','Frisbee'],         // sama-sama mainan dilempar di lapangan
+    ['Sepeda Roda Tiga','Skuter Anak'],// sama-sama kendaraan mainan anak kecil
+
+    // Warna & sifat visual (tricky karena bukan benda)
+    ['Merah','Oranye'],         // sama-sama warna hangat
+    ['Biru','Ungu'],            // sama-sama warna dingin/gelap
+    ['Putih','Abu-abu'],        // sama-sama warna yang tidak mencolok
+
+    // Anggota tubuh — mirip fungsi
+    ['Tangan','Kaki'],          // sama-sama anggota gerak
+    ['Mata','Telinga'],         // sama-sama indera di kepala
+    ['Hidung','Mulut'],         // sama-sama di wajah, berhubungan dengan nafas/makan
+    ['Gigi','Kuku'],            // sama-sama bagian tubuh yang bisa dipotong/tumbuh
 ];
+
 
 let numPlayers = 4;
 let numImpostors = 1;
